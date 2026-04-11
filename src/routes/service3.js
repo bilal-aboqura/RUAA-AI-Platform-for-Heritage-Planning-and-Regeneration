@@ -13,6 +13,7 @@ const http           = require('http');
 const router    = express.Router();
 const replicate = new Replicate({ auth: process.env.REPLICATE_API_TOKEN });
 
+// Graceful Job model import — works even if Mongo isn't connected
 const Job = (() => {
   try { return require('../models/Job'); }
   catch { return null; }
@@ -20,26 +21,17 @@ const Job = (() => {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const SERVICE_NAME        = '2.5D District Map Generator';
-const RMBG_MODEL          = 'cjwbw/rembg';
-const BLEND_MODEL         = 'google/nano-banana-2';
-const EDGE_MODEL          = 'black-forest-labs/flux-canny-pro';
+const BLEND_MODEL         = 'black-forest-labs/flux-2-max';
 const MAX_SPOTS           = 15;
 const MIN_SPOT_DIMENSION  = 50;
-const PIPELINE_TIMEOUT_MS = 5 * 60 * 1000;
+const PIPELINE_TIMEOUT_MS = 5 * 60 * 1000;  // 5 min download timeout
 
 const BLEND_PROMPT = [
-  'True isometric 45-degree angle projection of a Najdi architectural heritage district.',
-  'Buildings only. Traditional mud-brick structures with flat roofs, wooden doors,',
-  'and highly detailed entrances perfectly matching the exact spatial layout of the',
-  'underlying reference map. Isolated on a solid dark gray background (RGB 50, 50, 50).',
-  'High resolution, seamless realistic lighting, soft architectural shadows,',
-  'professional 2.5D rendering.',
-].join(' ');
-
-const BLEND_NEGATIVE_PROMPT = [
-  'european, medieval, modern, futuristic, low poly, untextured, plastic, generic 3d,',
-  'ground, streets, sky, terrain, white background, out of frame, perspective distortion,',
-  'non-isometric, different architecture.',
+  'A photorealistic, seamless isometric integration of traditional Najdi mud-brick',
+  'buildings into the surrounding terrain. Realistic soft architectural shadows cast',
+  'on the ground, matching the exact environmental lighting. High-end 2.5D',
+  'architectural render, preserving the exact geometric shape and spatial layout of',
+  'the input map. Calm, professional architectural visualization.',
 ].join(' ');
 
 // ─── Directories ──────────────────────────────────────────────────────────────
@@ -55,6 +47,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage, limits: { fileSize: 100 * 1024 * 1024 } });
 
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // Helper: download URL → local file (follows redirects)
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -67,6 +60,10 @@ function downloadFile(url, dest) {
         file.close(() => fs.unlink(dest, () => {}));
         return downloadFile(res.headers.location, dest).then(resolve).catch(reject);
       }
+      if (res.statusCode >= 400) {
+        file.close(() => fs.unlink(dest, () => {}));
+        return reject(new Error(`HTTP ${res.statusCode} downloading ${url}`));
+      }
       res.pipe(file);
       file.on('finish', () => file.close(resolve));
     });
@@ -74,6 +71,7 @@ function downloadFile(url, dest) {
     req.setTimeout(PIPELINE_TIMEOUT_MS, () => req.destroy(new Error('Download timeout')));
   });
 }
+
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // Helper: Validate the incoming spots array
@@ -125,6 +123,7 @@ function validateSpots(spots, mapWidth, mapHeight) {
   return { valid: errors.length === 0, errors };
 }
 
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // Helper: Resolve a building asset image from disk
 //   Looks for /public/outputs/{jobId}/{viewType}.png (then .jpg, .jpeg, .webp)
@@ -139,11 +138,13 @@ function resolveAssetImage(jobId, viewType) {
   const extPriority = ['.png', '.jpg', '.jpeg', '.webp', '.tiff'];
   const view = (viewType || 'aerial').toLowerCase();
 
+  // Direct match: {viewType}.{ext}
   for (const ext of extPriority) {
     const direct = path.join(jobDir, view + ext);
     if (fs.existsSync(direct)) return { imagePath: direct, error: null };
   }
 
+  // Fuzzy match: filename ends with _{viewType}
   const files = fs.readdirSync(jobDir).filter(f =>
     /\.(png|jpg|jpeg|tiff|webp)$/i.test(f),
   );
@@ -156,6 +157,7 @@ function resolveAssetImage(jobId, viewType) {
     if (match) return { imagePath: path.join(jobDir, match), error: null };
   }
 
+  // Last resort: grab any image (prefer PNG)
   if (files.length > 0) {
     const fallback = files.find(f => path.extname(f).toLowerCase() === '.png') || files[0];
     return { imagePath: path.join(jobDir, fallback), error: null };
@@ -164,54 +166,27 @@ function resolveAssetImage(jobId, viewType) {
   return { imagePath: null, error: `No image found for view "${view}" in job ${jobId}` };
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// Async Helper: Remove background via Replicate (briaai/rmbg-1.4)
-//   Falls back to original image on failure.
-// ═══════════════════════════════════════════════════════════════════════════════
-async function removeBackground(imagePath, outputPath) {
-  try {
-    const buffer = fs.readFileSync(imagePath);
-    const ext    = path.extname(imagePath).slice(1).toLowerCase();
-    const mime   = ext === 'png' ? 'image/png' : 'image/jpeg';
-    const dataUri = `data:${mime};base64,${buffer.toString('base64')}`;
-
-    console.log(`  [RMBG] Removing background: ${path.basename(imagePath)}`);
-    const output    = await replicate.run(RMBG_MODEL, { input: { image: dataUri } });
-    const resultUrl = String(Array.isArray(output) ? output[0] : output);
-    if (!resultUrl.startsWith('http')) throw new Error('Invalid RMBG output URL');
-
-    await downloadFile(resultUrl, outputPath);
-    console.log(`  [RMBG] ✓ Saved: ${path.basename(outputPath)}`);
-    return { success: true };
-  } catch (err) {
-    console.warn(`  [RMBG] ✗ Failed (${err.message}). Using original image.`);
-    try {
-      fs.copyFileSync(imagePath, outputPath);
-    } catch {
-      await sharp(imagePath).png().toFile(outputPath);
-    }
-    return { success: false, fallback: true };
-  }
-}
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// Async Helper: Composite all building cutouts onto the base map via sharp
-//   Returns the path to the raw composite PNG.
+// STAGE 1 — compositeImages()
+// Loads each building asset, resizes it to its bounding box, and composites
+// all buildings onto the uploaded base map using sharp.
+// Returns: { compositePath, compositeBuffer }
 // ═══════════════════════════════════════════════════════════════════════════════
-async function compositeBuildings(jobDir, baseMapPath, spots) {
-  const composites = [];
+async function compositeImages(jobDir, baseMapPath, spots) {
+  const overlays = [];
 
   for (let i = 0; i < spots.length; i++) {
     const spot = spots[i];
-    console.log(`  [Composite] Spot ${i + 1}/${spots.length} — job ${spot.jobId}, view ${spot.viewType || 'aerial'}`);
+    const view = spot.viewType || 'aerial';
+    console.log(`  [Composite] Spot ${i + 1}/${spots.length} — job ${spot.jobId}, view ${view}`);
 
-    const { imagePath, error } = resolveAssetImage(spot.jobId, spot.viewType || 'aerial');
+    // Resolve the pre-cut building image from disk
+    const { imagePath, error } = resolveAssetImage(spot.jobId, view);
     if (error) throw new Error(`Spot ${i + 1}: ${error}`);
 
-    const cutoutPath = path.join(jobDir, `spot_${i + 1}_cutout.png`);
-    const rmbg = await removeBackground(imagePath, cutoutPath);
-
-    const resized = await sharp(cutoutPath)
+    // Resize to exactly match the bounding box; contain keeps aspect + pads transparent
+    const resized = await sharp(imagePath)
       .resize(Math.round(spot.width), Math.round(spot.height), {
         fit: 'contain',
         background: { r: 0, g: 0, b: 0, alpha: 0 },
@@ -219,128 +194,126 @@ async function compositeBuildings(jobDir, baseMapPath, spots) {
       .png()
       .toBuffer();
 
-    composites.push({
+    overlays.push({
       input: resized,
       left:  Math.round(spot.x),
       top:   Math.round(spot.y),
     });
   }
 
-  const rawPath = path.join(jobDir, 'composite_raw.png');
+  // Composite all overlays onto the base map
+  const compositePath = path.join(jobDir, 'composite_raw.png');
   await sharp(baseMapPath)
-    .composite(composites)
+    .composite(overlays)
     .png()
-    .toFile(rawPath);
+    .toFile(compositePath);
 
-  console.log(`  [Composite] ✓ Raw composite saved`);
-  return rawPath;
+  // Also produce a buffer for the AI call
+  const compositeBuffer = fs.readFileSync(compositePath);
+  console.log(`  [Composite] ✓ Raw composite saved (${(compositeBuffer.length / 1024).toFixed(0)} KB)`);
+
+  return { compositePath, compositeBuffer };
 }
 
+
 // ═══════════════════════════════════════════════════════════════════════════════
-// Async Helper: AI Blending via google/nano-banana-2
-//   Nano Banana 2 API schema: prompt (required), image_input (array of URIs),
-//   aspect_ratio, resolution, output_format. No prompt_strength or negative_prompt.
-//   The prompt instructs the model to render a Najdi heritage 2.5D district while
-//   using the composite as the primary visual reference via image_input.
+// STAGE 2 — blendWithFlux()
+// Sends the composite to black-forest-labs/flux-2-max via Replicate so the
+// model blends lighting, shadows, and textures into a seamless 2.5D Najdi
+// architectural visualisation.
+//
+// The input_images parameter pins the model to the composite layout.
+// We match the aspect ratio and use maximum quality to prevent hallucinating
+// new structures.
+//
+// Fallback: If the AI call fails, we return the raw composite so the user
+// at least receives a usable result.
 // ═══════════════════════════════════════════════════════════════════════════════
-async function blendWithAI(jobDir, rawCompositePath) {
-  const blendedPath = path.join(jobDir, 'composite_blended.png');
+async function blendWithFlux(jobDir, compositeBuffer, mapWidth, mapHeight) {
+  const blendedPath = path.join(jobDir, 'district_2.5d_final.webp');
 
   try {
-    const buffer   = fs.readFileSync(rawCompositePath);
-    const dataUri  = `data:image/png;base64,${buffer.toString('base64')}`;
+    // Encode composite as data URI for the Replicate SDK
+    const dataUri = `data:image/png;base64,${compositeBuffer.toString('base64')}`;
 
-    console.log(`  [Blend] Calling ${BLEND_MODEL}...`);
-    const output    = await replicate.run(BLEND_MODEL, {
+    // Determine a reasonable aspect ratio from the map dimensions
+    const aspectRatio = computeAspectRatioLabel(mapWidth, mapHeight);
+
+    console.log(`  [Blend] Calling ${BLEND_MODEL} (aspect=${aspectRatio})...`);
+
+    const output = await replicate.run(BLEND_MODEL, {
       input: {
-        prompt:       BLEND_PROMPT,
-        image_input:  [dataUri],
-        aspect_ratio: 'match_input_image',
-        resolution:   '2K',
-        output_format: 'png',
+        prompt:          BLEND_PROMPT,
+        input_images:    [dataUri],
+        aspect_ratio:    aspectRatio,
+        output_format:   'webp',
+        output_quality:  95,
+        safety_tolerance: 5,           // architectural content — no false positives
       },
     });
 
+    // Replicate may return a string URL or an array
     const resultUrl = String(Array.isArray(output) ? output[0] : output);
-    if (!resultUrl.startsWith('http')) throw new Error('Invalid blend output URL');
+    if (!resultUrl.startsWith('http')) {
+      throw new Error(`Unexpected Flux-2-max output: ${resultUrl.substring(0, 80)}`);
+    }
 
     await downloadFile(resultUrl, blendedPath);
-    console.log(`  [Blend] ✓ Blended image saved`);
+    console.log(`  [Blend] ✓ AI-blended image saved`);
     return { path: blendedPath, usedFallback: false };
+
   } catch (err) {
-    console.warn(`  [Blend] ✗ Failed (${err.message}). Using raw composite.`);
-    fs.copyFileSync(rawCompositePath, blendedPath);
+    // ── FALLBACK: save raw composite as the final output ──────────────────
+    console.warn(`  [Blend] ✗ AI blending failed (${err.message}). Falling back to raw composite.`);
+    await sharp(compositeBuffer).webp({ quality: 95 }).toFile(blendedPath);
     return { path: blendedPath, usedFallback: true };
   }
 }
 
+
 // ═══════════════════════════════════════════════════════════════════════════════
-// Async Helper: Edge Control via black-forest-labs/flux-canny-pro
-//   Generates an edge map from the raw composite, then passes the blended
-//   image through canny-controlled generation to enforce geometric structure.
-//   Gracefully falls back to the blended image on any error.
+// Helper: pick the closest standard aspect_ratio label for Flux-2-max
 // ═══════════════════════════════════════════════════════════════════════════════
-async function enforceEdges(jobDir, rawCompositePath, blendedImagePath) {
-  const finalPath = path.join(jobDir, 'district_2.5d.png');
+function computeAspectRatioLabel(w, h) {
+  // Prefer match_input_image so the model preserves layout exactly
+  // The API schema lists it as a valid option
+  if (w && h) return 'match_input_image';
 
-  try {
-    const edgesPath = path.join(jobDir, 'edges.png');
-    await sharp(rawCompositePath)
-      .grayscale()
-      .convolve({
-        width:  3, height: 3,
-        kernel: [-1, -2, -1, 0, 0, 0, 1, 2, 1],
-      })
-      .convolve({
-        width:  3, height: 3,
-        kernel: [-1, 0, 1, -2, 0, 2, -1, 0, 1],
-      })
-      .normalize()
-      .threshold(128)
-      .png()
-      .toFile(edgesPath);
-
-    const edgesDataUri   = `data:image/png;base64,${fs.readFileSync(edgesPath).toString('base64')}`;
-    const blendedDataUri = `data:image/png;base64,${fs.readFileSync(blendedImagePath).toString('base64')}`;
-
-    console.log(`  [Edge] Calling ${EDGE_MODEL}...`);
-    const output    = await replicate.run(EDGE_MODEL, {
-      input: {
-        control_image:       edgesDataUri,
-        image:               blendedDataUri,
-        prompt:              'Preserve architectural edges, building outlines, rooflines, and geometric boundaries exactly. Maintain the unified lighting and seamless 2.5D district style.',
-        num_inference_steps: 50,
-        guidance_scale:      7.5,
-      },
-    });
-
-    const resultUrl = String(Array.isArray(output) ? output[0] : output);
-    if (!resultUrl.startsWith('http')) throw new Error('Invalid edge control output URL');
-
-    await downloadFile(resultUrl, finalPath);
-    console.log(`  [Edge] ✓ Final edge-controlled output saved`);
-    return { path: finalPath, usedFallback: false };
-  } catch (err) {
-    console.warn(`  [Edge] ✗ Failed (${err.message}). Using blended image as final.`);
-    fs.copyFileSync(blendedImagePath, finalPath);
-    return { path: finalPath, usedFallback: true };
+  // Fallback table (shouldn't normally be reached)
+  const ratios = [
+    { label: '1:1',  r: 1 },
+    { label: '4:5',  r: 4 / 5 },
+    { label: '5:4',  r: 5 / 4 },
+    { label: '3:2',  r: 3 / 2 },
+    { label: '2:3',  r: 2 / 3 },
+    { label: '16:9', r: 16 / 9 },
+    { label: '9:16', r: 9 / 16 },
+    { label: '21:9', r: 21 / 9 },
+    { label: '9:21', r: 9 / 21 },
+  ];
+  const target = w / h;
+  let best = ratios[0];
+  for (const r of ratios) {
+    if (Math.abs(r.r - target) < Math.abs(best.r - target)) best = r;
   }
+  return best.label;
 }
 
+
 // ═══════════════════════════════════════════════════════════════════════════════
-// Orchestrator: Run the full 3-stage pipeline
-//   Stage 1 → Asset retrieval + background removal + sharp compositing
-//   Stage 2 → AI visual blending (Nano Banana 2)
-//   Stage 3 → Edge control (Flux Canny Pro) — graceful fallback
+// Orchestrator: Run the full 2-stage pipeline
+//   Stage 1 → Asset retrieval + sharp compositing
+//   Stage 2 → AI visual blending (Flux-2-max) with fallback
 // ═══════════════════════════════════════════════════════════════════════════════
 async function runPipeline(jobId, baseMapPath, spots, districtName) {
   const jobDir = path.join(OUTPUTS_DIR, jobId);
   fs.mkdirSync(jobDir, { recursive: true });
 
-  const stages   = { compositing: 'pending', blending: 'pending', edgeControl: 'pending' };
+  const stages   = { compositing: 'pending', blending: 'pending' };
   const warnings = [];
   const outputs  = {};
 
+  // Convenience DB updater — silent on failure
   const updateJob = async (status) => {
     if (!Job) return;
     try {
@@ -354,44 +327,36 @@ async function runPipeline(jobId, baseMapPath, spots, districtName) {
   };
 
   try {
-    // ── Stage 1: Compositing ────────────────────────────────────────────────
+    // Read base map dimensions for validation context
+    const mapMeta = await sharp(baseMapPath).metadata();
+    const mapWidth  = mapMeta.width;
+    const mapHeight = mapMeta.height;
+
+    // ── Stage 1: Sharp Compositing ──────────────────────────────────────────
     stages.compositing = 'processing';
     await updateJob('processing');
-    console.log(`[Pipeline/${jobId}] Stage 1/3: Compositing (${spots.length} spots)...`);
+    console.log(`[Pipeline/${jobId}] Stage 1/2: Compositing (${spots.length} spots)...`);
 
-    const rawCompositePath = await compositeBuildings(jobDir, baseMapPath, spots);
+    const { compositePath, compositeBuffer } = await compositeImages(jobDir, baseMapPath, spots);
     outputs.rawComposite = `/outputs/${jobId}/composite_raw.png`;
     stages.compositing   = 'done';
 
-    // ── Stage 2: AI Blending ────────────────────────────────────────────────
+    // ── Stage 2: AI Blending (Flux-2-max) ───────────────────────────────────
     stages.blending = 'processing';
     await updateJob('processing');
-    console.log(`[Pipeline/${jobId}] Stage 2/3: AI Blending (${BLEND_MODEL})...`);
+    console.log(`[Pipeline/${jobId}] Stage 2/2: AI Blending (${BLEND_MODEL})...`);
 
-    const blendResult = await blendWithAI(jobDir, rawCompositePath);
-    outputs.blended   = `/outputs/${jobId}/composite_blended.png`;
-    stages.blending   = blendResult.usedFallback ? 'skipped' : 'done';
+    const blendResult = await blendWithFlux(jobDir, compositeBuffer, mapWidth, mapHeight);
+    outputs.final     = `/outputs/${jobId}/district_2.5d_final.webp`;
+    stages.blending   = blendResult.usedFallback ? 'fallback' : 'done';
     if (blendResult.usedFallback) {
-      warnings.push('AI blending failed — raw composite used as fallback.');
+      warnings.push('AI blending failed — raw composite saved as final output (fallback).');
     }
 
-    // ── Stage 3: Edge Control ───────────────────────────────────────────────
-    stages.edgeControl = 'processing';
-    await updateJob('processing');
-    console.log(`[Pipeline/${jobId}] Stage 3/3: Edge Control (${EDGE_MODEL})...`);
-
-    const edgeResult = await enforceEdges(jobDir, rawCompositePath, blendResult.path);
-    outputs.final    = `/outputs/${jobId}/district_2.5d.png`;
-    stages.edgeControl = edgeResult.usedFallback ? 'skipped' : 'done';
-    if (edgeResult.usedFallback) {
-      warnings.push('Edge control failed — blended image used as final output.');
-    }
-
-    // ── Finalize ────────────────────────────────────────────────────────────
+    // ── Finalize: metadata.json + DB update ─────────────────────────────────
     const outputFiles = [
-      { label: 'Raw Composite',  url: outputs.rawComposite, ext: 'png', stage: 'compositing' },
-      { label: 'Blended Image',  url: outputs.blended,      ext: 'png', stage: 'blending' },
-      { label: 'Final 2.5D Map', url: outputs.final,        ext: 'png', stage: 'edge-control' },
+      { label: 'Raw Composite',  url: outputs.rawComposite,  ext: 'png',  stage: 'compositing' },
+      { label: 'Final 2.5D Map', url: outputs.final,         ext: 'webp', stage: 'blending' },
     ];
 
     const metaPath = path.join(jobDir, 'metadata.json');
@@ -402,6 +367,9 @@ async function runPipeline(jobId, baseMapPath, spots, districtName) {
       spotsCount: spots.length,
       buildings: spots.map(s => ({ jobId: s.jobId, viewType: s.viewType || 'aerial' })),
       processedAt: new Date().toISOString(),
+      blendModel: BLEND_MODEL,
+      prompt: BLEND_PROMPT,
+      mapDimensions: { width: mapWidth, height: mapHeight },
       stages,
       outputFiles,
       warnings,
@@ -414,7 +382,7 @@ async function runPipeline(jobId, baseMapPath, spots, districtName) {
             status: 'done',
             outputFiles,
             metadata: {
-              baseMap: { filePath: baseMapPath },
+              baseMap: { filePath: baseMapPath, width: mapWidth, height: mapHeight },
               spots, districtName, stages, warnings,
             },
             completedAt: new Date(),
@@ -423,7 +391,7 @@ async function runPipeline(jobId, baseMapPath, spots, districtName) {
       } catch {}
     }
 
-    console.log(`[Pipeline/${jobId}] ✓ Complete — final: ${path.basename(edgeResult.path)}`);
+    console.log(`[Pipeline/${jobId}] ✓ Complete — final: ${path.basename(blendResult.path)}`);
 
     return {
       jobId,
@@ -433,8 +401,19 @@ async function runPipeline(jobId, baseMapPath, spots, districtName) {
       outputs,
       warnings,
     };
+
   } catch (err) {
     console.error(`[Pipeline/${jobId}] ✗ FAILED: ${err.message}`);
+
+    // If compositing succeeded but something else broke, save the raw composite as fallback
+    const rawPath = path.join(jobDir, 'composite_raw.png');
+    if (fs.existsSync(rawPath) && !fs.existsSync(path.join(jobDir, 'district_2.5d_final.webp'))) {
+      try {
+        await sharp(rawPath).webp({ quality: 95 }).toFile(path.join(jobDir, 'district_2.5d_final.webp'));
+        console.log(`[Pipeline/${jobId}] ⚠ Saved raw composite as fallback final output`);
+      } catch {}
+    }
+
     if (Job) {
       try {
         await Job.updateOne({ jobId }, {
@@ -445,6 +424,7 @@ async function runPipeline(jobId, baseMapPath, spots, districtName) {
     throw err;
   }
 }
+
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // Helper: Scan /public/outputs for S1/S2 building assets (for catalog UI)
@@ -495,6 +475,7 @@ function scanBuildingAssets() {
         }
       }
 
+      // If no named views matched, add all images generically
       if (views.length === 0) {
         for (const file of files) {
           const base = path.basename(file, path.extname(file));
@@ -524,6 +505,7 @@ function scanBuildingAssets() {
   return assets;
 }
 
+
 // ═══════════════════════════════════════════════════════════════════════════════
 //  R O U T E S
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -545,21 +527,25 @@ router.post('/discover-assets', (req, res) => {
   }
 });
 
+
 // ─── POST /compose ────────────────────────────────────────────────────────────
 // Accepts: baseMap (file), districtName (string), spots (JSON string)
 // Spots shape: [{ x, y, width, height, jobId, viewType }]
 // Returns immediately with jobId; pipeline runs in background.
 router.post('/compose', upload.single('baseMap'), async (req, res) => {
   try {
+    // ── Validate baseMap upload ──────────────────────────────────────────────
     if (!req.file) return res.status(400).json({ error: 'baseMap file is required' });
 
     const districtName = (req.body.districtName || '').trim().replace(/<[^>]*>/g, '').slice(0, 200);
     if (!districtName) return res.status(400).json({ error: 'districtName is required' });
 
+    // ── Parse spots JSON ────────────────────────────────────────────────────
     let spots;
     try { spots = JSON.parse(req.body.spots); }
     catch { return res.status(400).json({ error: 'spots must be valid JSON' }); }
 
+    // ── Read map dimensions for bounds-checking ─────────────────────────────
     const baseMapPath = req.file.path;
     const mapMeta     = await sharp(baseMapPath).metadata();
     const mapWidth    = mapMeta.width;
@@ -570,13 +556,16 @@ router.post('/compose', upload.single('baseMap'), async (req, res) => {
       return res.status(400).json({ error: 'Validation failed', details: validation.errors });
     }
 
+    // ── Prepare job directory ───────────────────────────────────────────────
     const jobId  = uuidv4();
     const jobDir = path.join(OUTPUTS_DIR, jobId);
     fs.mkdirSync(jobDir, { recursive: true });
 
+    // Copy base map into job dir for persistence / recompose
     const jobBaseMapPath = path.join(jobDir, `basemap${path.extname(req.file.originalname)}`);
     fs.copyFileSync(baseMapPath, jobBaseMapPath);
 
+    // ── Create Job document ─────────────────────────────────────────────────
     if (Job) {
       try {
         await Job.create({
@@ -598,8 +587,11 @@ router.post('/compose', upload.single('baseMap'), async (req, res) => {
     }
 
     console.log(`\n[S3/compose] ${jobId} | "${districtName}" | ${spots.length} spots | ${mapWidth}x${mapHeight}`);
+
+    // Respond immediately — pipeline runs in background
     res.json({ jobId, status: 'pending', districtName });
 
+    // ── Kick off pipeline asynchronously ────────────────────────────────────
     setImmediate(async () => {
       try {
         await runPipeline(jobId, jobBaseMapPath, spots, districtName);
@@ -612,6 +604,7 @@ router.post('/compose', upload.single('baseMap'), async (req, res) => {
     return res.status(500).json({ error: err.message });
   }
 });
+
 
 // ─── GET /job/:jobId ──────────────────────────────────────────────────────────
 // Returns current job status, pipeline stage progress, and output URLs.
@@ -632,11 +625,13 @@ router.get('/job/:jobId', async (req, res) => {
         spotsCount:   (meta.spots || []).length,
         stages:       meta.stages || meta.pipelineStages || {},
         outputs: {
-          rawComposite: files.includes('composite_raw.png') ? `/outputs/${jobId}/composite_raw.png` : null,
-          blended:      files.includes('composite_blended.png') ? `/outputs/${jobId}/composite_blended.png` : null,
-          final:        files.includes('district_2.5d.png') ? `/outputs/${jobId}/district_2.5d.png`
-                       : files.includes('composite_blended.png') ? `/outputs/${jobId}/composite_blended.png`
-                       : null,
+          rawComposite: files.includes('composite_raw.png')
+            ? `/outputs/${jobId}/composite_raw.png` : null,
+          final: files.includes('district_2.5d_final.webp')
+            ? `/outputs/${jobId}/district_2.5d_final.webp`
+            : files.includes('composite_raw.png')
+              ? `/outputs/${jobId}/composite_raw.png`
+              : null,
         },
         warnings: meta.warnings || [],
         createdAt: createdAt || '',
@@ -647,6 +642,7 @@ router.get('/job/:jobId', async (req, res) => {
       return res.json(buildResponse(job.status, job.metadata || {}, job.createdAt?.toISOString()));
     }
 
+    // Fallback: read from disk metadata
     const metaPath = path.join(OUTPUTS_DIR, jobId, 'metadata.json');
     if (!fs.existsSync(metaPath)) {
       return res.status(404).json({ error: 'Job not found' });
@@ -659,6 +655,7 @@ router.get('/job/:jobId', async (req, res) => {
   }
 });
 
+
 // ─── POST /recompose/:jobId ──────────────────────────────────────────────────
 // Re-runs the pipeline on an existing job with modified spots.
 router.post('/recompose/:jobId', express.json({ limit: '10mb' }), async (req, res) => {
@@ -670,6 +667,7 @@ router.post('/recompose/:jobId', express.json({ limit: '10mb' }), async (req, re
       return res.status(400).json({ error: 'spots array is required' });
     }
 
+    // ── Retrieve existing job data ──────────────────────────────────────────
     let existingMeta = null;
     let job = null;
     if (Job) { try { job = await Job.findOne({ jobId }); } catch {} }
@@ -721,8 +719,9 @@ router.post('/recompose/:jobId', express.json({ limit: '10mb' }), async (req, re
   }
 });
 
+
 // ─── GET /previous-outputs ────────────────────────────────────────────────────
-// Browse completed S1 & S2 job results (backward compat).
+// Browse completed S1 & S2 job results (backward compat for catalog UI).
 router.get('/previous-outputs', (req, res) => {
   try {
     const serviceFilter = parseInt(req.query.service) || null;
@@ -772,5 +771,6 @@ router.get('/previous-outputs', (req, res) => {
     return res.status(500).json({ error: err.message });
   }
 });
+
 
 module.exports = router;
