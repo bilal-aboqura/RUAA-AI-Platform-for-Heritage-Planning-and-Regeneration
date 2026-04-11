@@ -29,8 +29,18 @@ const router = express.Router();
 const UPLOADS_DIR = path.join(__dirname, '../../public/uploads');
 const OUTPUTS_DIR = path.join(__dirname, '../../public/outputs');
 [UPLOADS_DIR, OUTPUTS_DIR].forEach(dir => fs.mkdirSync(dir, { recursive: true }));
-const PDF_FONT_REGULAR = 'C:\\Windows\\Fonts\\arial.ttf';
-const PDF_FONT_BOLD = 'C:\\Windows\\Fonts\\arialbd.ttf';
+const PDF_FONT_REGULAR = [
+  'C:\\Windows\\Fonts\\arial.ttf',
+  '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
+  '/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf',
+  '/usr/share/fonts/truetype/freefont/FreeSans.ttf',
+].find(p => require('fs').existsSync(p)) || '';
+const PDF_FONT_BOLD = [
+  'C:\\Windows\\Fonts\\arialbd.ttf',
+  '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf',
+  '/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf',
+  '/usr/share/fonts/truetype/freefont/FreeSansBold.ttf',
+].find(p => require('fs').existsSync(p)) || '';
 
 const storage = multer.diskStorage({
   destination: (_, __, cb) => cb(null, UPLOADS_DIR),

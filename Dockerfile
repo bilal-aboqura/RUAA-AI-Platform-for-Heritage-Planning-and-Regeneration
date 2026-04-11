@@ -21,14 +21,19 @@ RUN npm run build:css
 # ─────────────────────────────────────────────────────────────────────────────
 # Stage 2 — runner (production)
 #   Lean image: only production deps, pre-built CSS, no devDeps.
+#   Includes Blender headless for Service 05 3D rendering.
 # ─────────────────────────────────────────────────────────────────────────────
 FROM node:20-slim AS runner
 
-# Install OS-level libs required by sharp (libvips) and canvas processing
+# Install OS-level libs required by sharp (libvips), Blender, and PDF fonts
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libvips-dev \
     libglib2.0-0 \
     libexpat1 \
+    blender \
+    fonts-dejavu-core \
+    fonts-liberation \
+    fonts-freefont-ttf \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app

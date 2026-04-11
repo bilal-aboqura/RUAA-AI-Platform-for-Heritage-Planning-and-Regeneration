@@ -59,12 +59,39 @@ const SERVICE_NAMES = {
 
 const UPLOADS_DIR = path.join(__dirname, '../../public/uploads');
 const OUTPUTS_DIR = path.join(__dirname, '../../public/outputs');
-const PDF_FONT_REGULAR = 'C:\\Windows\\Fonts\\arial.ttf';
-const PDF_FONT_BOLD = 'C:\\Windows\\Fonts\\arialbd.ttf';
-const PDF_FONT_SEGOE = 'C:\\Windows\\Fonts\\segoeui.ttf';
-const PDF_FONT_SEGOE_BOLD = 'C:\\Windows\\Fonts\\segoeuib.ttf';
-const PDF_FONT_TAHOMA = 'C:\\Windows\\Fonts\\tahoma.ttf';
-const PDF_FONT_TAHOMA_BOLD = 'C:\\Windows\\Fonts\\tahomabd.ttf';
+const _fontResolve = (candidates) => candidates.find(p => require('fs').existsSync(p)) || '';
+const PDF_FONT_REGULAR = _fontResolve([
+  'C:\\Windows\\Fonts\\arial.ttf',
+  '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
+  '/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf',
+  '/usr/share/fonts/truetype/freefont/FreeSans.ttf',
+]);
+const PDF_FONT_BOLD = _fontResolve([
+  'C:\\Windows\\Fonts\\arialbd.ttf',
+  '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf',
+  '/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf',
+  '/usr/share/fonts/truetype/freefont/FreeSansBold.ttf',
+]);
+const PDF_FONT_SEGOE = _fontResolve([
+  'C:\\Windows\\Fonts\\segoeui.ttf',
+  '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
+  '/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf',
+]);
+const PDF_FONT_SEGOE_BOLD = _fontResolve([
+  'C:\\Windows\\Fonts\\segoeuib.ttf',
+  '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf',
+  '/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf',
+]);
+const PDF_FONT_TAHOMA = _fontResolve([
+  'C:\\Windows\\Fonts\\tahoma.ttf',
+  '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
+  '/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf',
+]);
+const PDF_FONT_TAHOMA_BOLD = _fontResolve([
+  'C:\\Windows\\Fonts\\tahomabd.ttf',
+  '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf',
+  '/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf',
+]);
 const REPLICATE_API_TOKEN = process.env.REPLICATE_API_TOKEN || '';
 const SERVICE_06_BOARD_IMAGE_MODEL = process.env.SERVICE_06_BOARD_IMAGE_MODEL
   || process.env.NANO_BANANA_IMAGE_MODEL

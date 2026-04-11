@@ -46,8 +46,18 @@ const SERVICE_05_DEFINITION = 'Transform architectural rehabilitation outputs, r
 
 const UPLOADS_DIR = path.join(__dirname, '../../public/uploads');
 const OUTPUTS_DIR = path.join(__dirname, '../../public/outputs');
-const PDF_FONT_REGULAR = 'C:\\Windows\\Fonts\\arial.ttf';
-const PDF_FONT_BOLD = 'C:\\Windows\\Fonts\\arialbd.ttf';
+const PDF_FONT_REGULAR = [
+  'C:\\Windows\\Fonts\\arial.ttf',
+  '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
+  '/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf',
+  '/usr/share/fonts/truetype/freefont/FreeSans.ttf',
+].find(p => require('fs').existsSync(p)) || '';
+const PDF_FONT_BOLD = [
+  'C:\\Windows\\Fonts\\arialbd.ttf',
+  '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf',
+  '/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf',
+  '/usr/share/fonts/truetype/freefont/FreeSansBold.ttf',
+].find(p => require('fs').existsSync(p)) || '';
 const REPLICATE_API_TOKEN = process.env.REPLICATE_API_TOKEN || '';
 const REPLICATE_3D_PRIMARY_MODEL = process.env.REPLICATE_3D_MODEL || 'tencent/hunyuan-3d-3.1';
 const REPLICATE_3D_FALLBACK_MODEL = process.env.REPLICATE_3D_FALLBACK_MODEL || 'tencent/hunyuan3d-2';
@@ -334,14 +344,21 @@ function materialProfileFromStyle(style) {
 }
 
 function getBlenderPath() {
-  // Normalize env var: if it points to a directory, append blender.exe
+  const isWindows = process.platform === 'win32';
   let envPath = process.env.BLENDER_PATH || '';
-  if (envPath && !envPath.toLowerCase().endsWith('.exe')) {
+
+  // Normalize env var: if it points to a directory, append the binary name
+  if (envPath && isWindows && !envPath.toLowerCase().endsWith('.exe')) {
     envPath = path.join(envPath, 'blender.exe');
   }
 
   const candidates = [
     envPath,
+    // Linux paths
+    '/usr/bin/blender',
+    '/usr/local/bin/blender',
+    '/snap/bin/blender',
+    // Windows paths
     'C:\\Program Files\\Blender Foundation\\Blender 5.1\\blender.exe',
     'C:\\Program Files\\Blender Foundation\\Blender 5.0\\blender.exe',
     'C:\\Program Files\\Blender Foundation\\Blender 4.2\\blender.exe',
@@ -358,6 +375,12 @@ function getHeadlessBrowserPath() {
     process.env.BROWSER_CAPTURE_PATH,
     process.env.CHROME_PATH,
     process.env.EDGE_PATH,
+    // Linux paths
+    '/usr/bin/chromium-browser',
+    '/usr/bin/chromium',
+    '/usr/bin/google-chrome-stable',
+    '/usr/bin/google-chrome',
+    // Windows paths
     'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
     'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
     'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe',
@@ -3786,7 +3809,40 @@ async function buildStrategicViews(jobDir, scene, context, modelEntries = []) {
     return blenderViews;
   }
 
-  throw new Error('Service 05 presentation rendering failed: Blender official rendering is required and no official Blender renders were produced.');
+  // Graceful fallback: generate placeholder SVG views instead of failing
+  console.warn('[Service 05] Blender not available — generating SVG placeholder views.');
+  const viewDefs = BLENDER_VIEW_TEMPLATES.slice(0, 3);
+  const fallbackViews = [];
+  for (const view of viewDefs) {
+    const svgContent = buildPlaceholderViewSvg(
+      view.title || view.id,
+      view.subtitle || 'Blender rendering unavailable on this server',
+      view.width || 1280,
+      view.height || 720
+    );
+    const svgPath = path.join(jobDir, `${view.fileBase}_fallback.svg`);
+    const jpgPath = path.join(jobDir, `${view.fileBase}_fallback.jpg`);
+    fs.writeFileSync(svgPath, svgContent);
+    try {
+      await sharp(Buffer.from(svgContent))
+        .resize(view.width || 1280, view.height || 720)
+        .jpeg({ quality: 90 })
+        .toFile(jpgPath);
+    } catch (err) {
+      console.warn(`[Service 05] SVG→JPG conversion failed for ${view.id}: ${err.message}`);
+      continue;
+    }
+    fallbackViews.push({
+      ...view,
+      pngPath: '',
+      jpgPath,
+      svgPath,
+      renderMode: 'svg-fallback',
+      sourceModel: '',
+    });
+  }
+  if (fallbackViews.length) return fallbackViews;
+  throw new Error('Service 05 presentation rendering failed: Blender is not available and SVG fallback generation also failed.');
 }
 
 async function buildWordGuide(context, sceneSummary, scene, outPath) {
