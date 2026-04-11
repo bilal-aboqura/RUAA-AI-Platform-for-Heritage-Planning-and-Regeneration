@@ -21,7 +21,7 @@ const Job = (() => {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const SERVICE_NAME        = '2.5D District Map Generator';
-const BLEND_MODEL         = 'black-forest-labs/flux-2-max';
+const BLEND_MODEL         = 'google/nano-banana-pro';
 const MAX_SPOTS           = 15;
 const MIN_SPOT_DIMENSION  = 50;
 const PIPELINE_TIMEOUT_MS = 5 * 60 * 1000;  // 5 min download timeout
@@ -217,19 +217,18 @@ async function compositeImages(jobDir, baseMapPath, spots) {
 
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// STAGE 2 — blendWithFlux()
-// Sends the composite to black-forest-labs/flux-2-max via Replicate so the
+// STAGE 2 — blendWithNanoBanana()
+// Sends the composite to google/nano-banana-pro via Replicate so the
 // model blends lighting, shadows, and textures into a seamless 2.5D Najdi
 // architectural visualisation.
 //
-// The input_images parameter pins the model to the composite layout.
-// We match the aspect ratio and use maximum quality to prevent hallucinating
-// new structures.
+// The image_input parameter pins the model to the composite layout.
+// We match the aspect ratio to prevent hallucinating new structures.
 //
 // Fallback: If the AI call fails, we return the raw composite so the user
 // at least receives a usable result.
 // ═══════════════════════════════════════════════════════════════════════════════
-async function blendWithFlux(jobDir, compositeBuffer, mapWidth, mapHeight) {
+async function blendWithNanoBanana(jobDir, compositeBuffer, mapWidth, mapHeight) {
   const blendedPath = path.join(jobDir, 'district_2.5d_final.webp');
 
   try {
@@ -250,18 +249,17 @@ async function blendWithFlux(jobDir, compositeBuffer, mapWidth, mapHeight) {
     const output = await replicate.run(BLEND_MODEL, {
       input: {
         prompt:          BLEND_PROMPT,
-        input_images:    [compositeUrl],
+        image_input:     [compositeUrl],
         aspect_ratio:    aspectRatio,
-        output_format:   'webp',
-        output_quality:  95,
-        safety_tolerance: 5,           // architectural content — no false positives
+        resolution:      '1K',
+        output_format:   'png',
       },
     });
 
     // Replicate may return a string URL or an array
     const resultUrl = String(Array.isArray(output) ? output[0] : output);
     if (!resultUrl.startsWith('http')) {
-      throw new Error(`Unexpected Flux-2-max output: ${resultUrl.substring(0, 80)}`);
+      throw new Error(`Unexpected nano-banana-pro output: ${resultUrl.substring(0, 80)}`);
     }
 
     await downloadFile(resultUrl, blendedPath);
@@ -278,7 +276,7 @@ async function blendWithFlux(jobDir, compositeBuffer, mapWidth, mapHeight) {
 
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// Helper: pick the closest standard aspect_ratio label for Flux-2-max
+// Helper: pick the closest standard aspect_ratio label for nano-banana-pro
 // ═══════════════════════════════════════════════════════════════════════════════
 function computeAspectRatioLabel(w, h) {
   // Prefer match_input_image so the model preserves layout exactly
@@ -309,7 +307,7 @@ function computeAspectRatioLabel(w, h) {
 // ═══════════════════════════════════════════════════════════════════════════════
 // Orchestrator: Run the full 2-stage pipeline
 //   Stage 1 → Asset retrieval + sharp compositing
-//   Stage 2 → AI visual blending (Flux-2-max) with fallback
+//   Stage 2 → AI visual blending (nano-banana-pro) with fallback
 // ═══════════════════════════════════════════════════════════════════════════════
 async function runPipeline(jobId, baseMapPath, spots, districtName) {
   const jobDir = path.join(OUTPUTS_DIR, jobId);
@@ -347,12 +345,12 @@ async function runPipeline(jobId, baseMapPath, spots, districtName) {
     outputs.rawComposite = `/outputs/${jobId}/composite_raw.png`;
     stages.compositing   = 'done';
 
-    // ── Stage 2: AI Blending (Flux-2-max) ───────────────────────────────────
+    // ── Stage 2: AI Blending (nano-banana-pro) ──────────────────────────────
     stages.blending = 'processing';
     await updateJob('processing');
     console.log(`[Pipeline/${jobId}] Stage 2/2: AI Blending (${BLEND_MODEL})...`);
 
-    const blendResult = await blendWithFlux(jobDir, compositeBuffer, mapWidth, mapHeight);
+    const blendResult = await blendWithNanoBanana(jobDir, compositeBuffer, mapWidth, mapHeight);
     outputs.final     = `/outputs/${jobId}/district_2.5d_final.webp`;
     stages.blending   = blendResult.usedFallback ? 'fallback' : 'done';
     if (blendResult.usedFallback) {
