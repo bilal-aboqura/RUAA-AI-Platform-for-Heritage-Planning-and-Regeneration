@@ -1,0 +1,41 @@
+# ── Node / npm ────────────────────────────────────────────────────────────────
+node_modules/
+npm-debug.log*
+
+# ── Environment / secrets ─────────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+
+# ── Runtime-generated directories (use named volumes, not image layers) ───────
+public/uploads/
+public/outputs/
+
+# ── Logs ─────────────────────────────────────────────────────────────────────
+*.log
+server.stdout.log
+server.stderr.log
+server_stdout.log
+server_stderr.log
+
+# ── Build artefacts ───────────────────────────────────────────────────────────
+dist/
+build/
+
+# ── VCS ───────────────────────────────────────────────────────────────────────
+.git/
+.gitignore
+
+# ── Editor / OS noise ─────────────────────────────────────────────────────────
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+*.tmp
+
+# ── Agent / spec files (not needed in the image) ──────────────────────────────
+.agent/
+.specify/
+.opencode/
+specs/

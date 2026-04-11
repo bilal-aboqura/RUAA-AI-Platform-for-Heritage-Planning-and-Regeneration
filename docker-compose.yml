@@ -1,0 +1,43 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: re22-app:latest
+    container_name: re22_app
+    restart: unless-stopped
+
+    # Load all environment variables from the .env file on the host.
+    # Never commit your real .env — use .env.example as the template.
+    env_file:
+      - .env
+
+    ports:
+      # Bind to localhost only. Nginx (on the VPS host) proxies external traffic.
+      - "127.0.0.1:3000:3000"
+
+    volumes:
+      # Named volumes ensure upload / output data persists across re-deploys.
+      - uploads_data:/app/public/uploads
+      - outputs_data:/app/public/outputs
+
+    healthcheck:
+      test: ["CMD", "node", "-e",
+        "require('http').get('http://localhost:' + (process.env.PORT || 3000) + '/', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+volumes:
+  # Named volumes are managed by Docker; they survive container removal.
+  uploads_data:
+    driver: local
+  outputs_data:
+    driver: local

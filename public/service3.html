@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" class="scroll-smooth">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>خدمة 03 — مولّد خرائط الأحياء 2.5D | رُؤى</title>
+  <link href="/css/style.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Cairo', sans-serif; }
+    .glass { background: rgba(28,53,84,0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.08); }
+    .glass-dark { background: rgba(11,21,33,0.85); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.06); }
+    #mapCanvas { cursor: crosshair; }
+    #mapCanvas.assigning { cursor: pointer; }
+    .spot-label { position: absolute; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; pointer-events: none; z-index: 10; }
+    .catalog-card { transition: all 0.2s ease; }
+    .catalog-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+    .catalog-card.selected { ring: 2px; ring-color: #dfb867; border-color: #dfb867 !important; }
+    .stage-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+    .stage-done { background: rgba(74,222,128,0.15); color: #4ade80; border: 1px solid rgba(74,222,128,0.3); }
+    .stage-processing { background: rgba(251,191,36,0.15); color: #fbbf24; border: 1px solid rgba(251,191,36,0.3); animation: pulse 1.5s infinite; }
+    .stage-skipped { background: rgba(148,163,184,0.15); color: #94a3b8; border: 1px solid rgba(148,163,184,0.3); }
+    .stage-pending { background: rgba(255,255,255,0.05); color: #64748b; border: 1px solid rgba(255,255,255,0.1); }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner { animation: spin 1s linear infinite; }
+    .fade-in { animation: fadeIn 0.3s ease-in; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .canvas-wrapper { position: relative; display: inline-block; }
+    .canvas-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+  </style>
+</head>
+
+<body class="min-h-screen text-white bg-[#0b1521] flex flex-col">
+
+  <!-- Navbar (hidden when embedded in dashboard iframe) -->
+  <nav id="s3-navbar" class="fixed top-6 left-0 right-0 z-50 flex justify-center">
+    <div class="glass rounded-2xl px-8 py-3 flex items-center gap-6 shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
+      <a href="/index.html" class="text-white/60 hover:text-white transition font-semibold text-sm">الرئيسية</a>
+      <a href="/services.html" class="text-white/60 hover:text-white transition font-semibold text-sm">خدماتنا</a>
+      <span class="text-[#dfb867] font-bold text-sm">خدمة 03 — مولّد خرائط الأحياء 2.5D</span>
+      <div class="w-px h-4 bg-white/10"></div>
+      <a href="/login.html" class="text-[#dfb867] hover:text-[#f8d07a] transition font-bold text-sm">تسجيل الدخول</a>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="flex-1 pt-24 pb-12 px-4 max-w-[1600px] mx-auto w-full">
+
+    <!-- Header -->
+    <div class="text-center mb-8">
+      <div class="inline-block bg-[#dfb867]/10 border border-[#dfb867]/20 rounded-full px-4 py-1 text-[#dfb867] text-xs font-bold mb-3">الخدمة 03</div>
+      <h1 class="text-3xl font-black text-white mb-2">مولّد خرائط الأحياء ثلاثية الأبعاد</h1>
+      <p class="text-white/50 text-sm max-w-2xl mx-auto">ارفع خريطة أساسية، حدد مواقع المباني، اسند أصول المباني من الخدمات السابقة، واحصل على خريطة 2.5D مدمجة بثلاث مراحل من معالجة الذكاء الاصطناعي</p>
+    </div>
+
+    <!-- Resolution Warning (T029) -->
+    <div id="resolutionWarning" class="hidden max-w-4xl mx-auto mb-4 bg-amber-900/30 border border-amber-500/30 rounded-xl p-4 text-right">
+      <div class="flex items-center gap-3">
+        <svg class="w-6 h-6 text-amber-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+        <p class="text-amber-200 text-sm font-bold">دقة الخريطة أقل من الموصى به (1500×1500 بكسل). يُنصح برفع خريطة بدقة أعلى للحصول على نتيجة أفضل.</p>
+      </div>
+    </div>
+
+    <!-- ===================== STEP 1: UPLOAD ===================== -->
+    <section id="uploadSection" class="glass-dark rounded-2xl p-6 mb-6 max-w-4xl mx-auto fade-in">
+      <h2 class="text-lg font-bold text-[#dfb867] mb-4 flex items-center gap-2">
+        <span class="bg-[#dfb867]/20 text-[#dfb867] w-8 h-8 rounded-full flex items-center justify-center text-sm font-black">1</span>
+        رفع الخريطة الأساسية
+      </h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="md:col-span-2">
+          <label class="block border-2 border-dashed border-white/10 hover:border-[#dfb867]/40 rounded-xl p-8 text-center cursor-pointer transition" id="dropZone">
+            <svg class="w-12 h-12 mx-auto text-white/20 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            <p class="text-white/40 text-sm font-bold mb-1">اضغط أو اسحب الخريطة هنا</p>
+            <p class="text-white/25 text-xs">JPEG, PNG, TIFF, WebP — حد أقصى 100 ميجابايت</p>
+            <input type="file" id="baseMapInput" accept=".jpg,.jpeg,.png,.tif,.tiff,.webp" class="hidden">
+          </label>
+          <p id="fileName" class="text-white/40 text-xs mt-2 text-center"></p>
+        </div>
+        <div class="flex flex-col gap-3">
+          <div>
+            <label class="block text-white/50 text-xs font-bold mb-1">اسم الحي</label>
+            <input type="text" id="districtNameInput" placeholder="مثال: حي سمحان" class="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:border-[#dfb867]/50 focus:outline-none transition" maxlength="200">
+          </div>
+          <button id="uploadBtn" disabled class="mt-auto bg-[#dfb867] hover:bg-[#f8d07a] text-[#0b1521] font-bold py-2.5 px-4 rounded-lg text-sm transition disabled:opacity-30 disabled:cursor-not-allowed">
+            رفع وعرض الخريطة
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== STEP 2: EDITOR ===================== -->
+    <section id="editorSection" class="hidden fade-in">
+      <div class="grid grid-cols-12 gap-4">
+
+        <!-- Building Catalog Panel (T012) -->
+        <div class="col-span-12 lg:col-span-3 glass-dark rounded-2xl p-4 max-h-[700px] overflow-y-auto order-2 lg:order-1">
+          <h3 class="text-sm font-bold text-[#dfb867] mb-3 flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+            كتالوج المباني
+          </h3>
+          <div id="catalogList" class="space-y-2">
+            <div class="text-white/30 text-xs text-center py-8">جاري تحميل الكتالوج...</div>
+          </div>
+        </div>
+
+        <!-- Canvas Editor (T010, T011, T014) -->
+        <div class="col-span-12 lg:col-span-6 order-1 lg:order-2">
+          <div class="glass-dark rounded-2xl p-4">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="text-sm font-bold text-[#dfb867] flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+                محرر الخريطة
+              </h3>
+              <div class="flex items-center gap-2">
+                <span class="text-white/30 text-xs" id="canvasInfo">ارسم مستطيلات لتحديد مواقع المباني</span>
+                <button id="clearSpotsBtn" class="text-xs text-red-400/60 hover:text-red-400 transition px-2 py-1 rounded" title="مسح جميع المواقع">مسح الكل</button>
+              </div>
+            </div>
+            <div class="canvas-wrapper mx-auto border border-white/5 rounded-xl overflow-hidden bg-black/30" id="canvasContainer">
+              <canvas id="mapCanvas"></canvas>
+            </div>
+            <div class="flex items-center justify-between mt-3 text-xs text-white/30">
+              <span id="canvasDims"></span>
+              <span>اضغط واسحب لرسم مستطيل | Delete لحذف الموقع المحدد | Escape للإلغاء</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Spot Assignment Panel (T013) -->
+        <div class="col-span-12 lg:col-span-3 glass-dark rounded-2xl p-4 max-h-[700px] overflow-y-auto order-3">
+          <h3 class="text-sm font-bold text-[#dfb867] mb-3 flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+            المواقع المسندة
+          </h3>
+          <div id="spotList" class="space-y-2">
+            <div class="text-white/30 text-xs text-center py-8">ارسم مستطيلات على الخريطة أولاً</div>
+          </div>
+          <button id="submitBtn" class="hidden w-full mt-4 bg-[#dfb867] hover:bg-[#f8d07a] text-[#0b1521] font-bold py-3 px-4 rounded-lg text-sm transition">
+            إرسال للمعالجة
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ===================== PROGRESS (T020) ===================== -->
+    <section id="progressSection" class="hidden fade-in max-w-2xl mx-auto mt-8">
+      <div class="glass-dark rounded-2xl p-8 text-center">
+        <div class="mb-6">
+          <svg class="w-12 h-12 mx-auto text-[#dfb867] spinner mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          <h2 class="text-xl font-bold text-white mb-1">جاري المعالجة</h2>
+          <p class="text-white/40 text-sm" id="progressJobId"></p>
+        </div>
+        <div class="space-y-3 text-right" id="progressStages">
+          <div class="stage-badge stage-pending w-full justify-center" id="stageCompositing">
+            <span class="w-4 h-4 rounded-full border-2 border-current"></span>
+            التركيب (Compositing)
+          </div>
+          <div class="stage-badge stage-pending w-full justify-center" id="stageBlending">
+            <span class="w-4 h-4 rounded-full border-2 border-current"></span>
+            الدمج بالذكاء الاصطناعي (Blending)
+          </div>
+          <div class="stage-badge stage-pending w-full justify-center" id="stageEdgeControl">
+            <span class="w-4 h-4 rounded-full border-2 border-current"></span>
+            التحكم بالحواف (Edge Control)
+          </div>
+        </div>
+        <p class="text-white/20 text-xs mt-6">يتم التحديث تلقائياً كل 3 ثوانٍ</p>
+      </div>
+    </section>
+
+    <!-- ===================== RESULTS (T025) ===================== -->
+    <section id="resultsSection" class="hidden fade-in max-w-5xl mx-auto mt-8">
+      <div class="glass-dark rounded-2xl p-6">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-xl font-bold text-white">النتيجة النهائية</h2>
+          <div class="flex items-center gap-3">
+            <button id="reprocessBtn" class="bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold py-2 px-4 rounded-lg text-sm transition">
+              تعديل وإعادة المعالجة
+            </button>
+            <button id="downloadBtn" class="bg-[#dfb867] hover:bg-[#f8d07a] text-[#0b1521] font-bold py-2 px-4 rounded-lg text-sm transition">
+              تحميل النتيجة
+            </button>
+          </div>
+        </div>
+
+        <!-- Main Image -->
+        <div class="text-center mb-6">
+          <img id="finalImage" src="" alt="Final 2.5D Output" class="max-w-full max-h-[600px] mx-auto rounded-xl border border-white/10 shadow-2xl">
+        </div>
+
+        <!-- Pipeline Stage Badges -->
+        <div class="flex items-center justify-center gap-3 mb-4 flex-wrap" id="resultStageBadges"></div>
+
+        <!-- Warnings -->
+        <div id="resultWarnings" class="hidden mb-4"></div>
+
+        <!-- Comparison Toggle -->
+        <div class="flex items-center justify-center gap-4 mb-4">
+          <button class="compare-tab active text-sm font-bold text-[#dfb867] border-b-2 border-[#dfb867] pb-1 px-2 transition" data-view="final">النهائي</button>
+          <button class="compare-tab text-sm font-bold text-white/40 border-b-2 border-transparent pb-1 px-2 hover:text-white/60 transition" data-view="blended">المدمج</button>
+          <button class="compare-tab text-sm font-bold text-white/40 border-b-2 border-transparent pb-1 px-2 hover:text-white/60 transition" data-view="raw">الخام</button>
+        </div>
+        <p id="resultVersion" class="text-center text-white/20 text-xs"></p>
+      </div>
+    </section>
+
+    <!-- ===================== VERSION HISTORY (T027) ===================== -->
+    <section id="versionHistory" class="hidden fade-in max-w-4xl mx-auto mt-6">
+      <div class="glass-dark rounded-2xl p-4">
+        <h3 class="text-sm font-bold text-[#dfb867] mb-3">سجل الإصدارات</h3>
+        <div id="versionList" class="space-y-2"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="text-center py-6 text-white/15 text-xs border-t border-white/5">
+    منصة رُؤى للتراث العمراني — خدمة 03: مولّد خرائط الأحياء 2.5D
+  </footer>
+
+<script>
+(function() {
+  'use strict';
+
+  // ── State ────────────────────────────────────────────────────────────
+  let baseMapFile = null;
+  let baseMapImage = null;
+  let canvasScale = 1;
+  let spots = [];
+  let selectedSpotIndex = -1;
+  let isDrawing = false;
+  let drawStart = null;
+  let drawCurrent = null;
+  let selectedAsset = null;
+  let assets = [];
+  let currentJobId = null;
+  let currentVersion = 1;
+  let pollTimer = null;
+  let outputs = {};
+  let spotImages = {};
+
+  // ── DOM ──────────────────────────────────────────────────────────────
+  const $ = id => document.getElementById(id);
+  const canvas = $('mapCanvas');
+  const ctx = canvas.getContext('2d');
+
+  // ── Upload Section (T010) ────────────────────────────────────────────
+  const baseMapInput = $('baseMapInput');
+  const dropZone = $('dropZone');
+  const uploadBtn = $('uploadBtn');
+  const districtNameInput = $('districtNameInput');
+
+  baseMapInput.addEventListener('change', e => {
+    if (e.target.files.length) {
+      baseMapFile = e.target.files[0];
+      $('fileName').textContent = baseMapFile.name + ' (' + (baseMapFile.size / 1024 / 1024).toFixed(1) + ' MB)';
+      uploadBtn.disabled = false;
+    }
+  });
+
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.style.borderColor = 'rgba(223,184,103,0.5)'; });
+  dropZone.addEventListener('dragleave', () => { dropZone.style.borderColor = ''; });
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.style.borderColor = '';
+    if (e.dataTransfer.files.length) {
+      baseMapFile = e.dataTransfer.files[0];
+      baseMapInput.files = e.dataTransfer.files;
+      $('fileName').textContent = baseMapFile.name;
+      uploadBtn.disabled = false;
+    }
+  });
+
+  uploadBtn.addEventListener('click', () => {
+    if (!baseMapFile) return;
+    const districtName = districtNameInput.value.trim().replace(/<[^>]*>/g, '').slice(0, 200);
+    if (!districtName) { districtNameInput.focus(); districtNameInput.style.borderColor = 'rgba(239,68,68,0.5)'; return; }
+    districtNameInput.style.borderColor = '';
+    loadBaseMap(baseMapFile);
+  });
+
+  function loadBaseMap(file) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        baseMapImage = img;
+        setupCanvas(img);
+        $('uploadSection').classList.add('hidden');
+        $('editorSection').classList.remove('hidden');
+        $('resolutionWarning').classList.toggle('hidden', img.width >= 1500 && img.height >= 1500);
+        $('canvasDims').textContent = img.width + ' × ' + img.height + ' بكسل';
+        loadCatalog();
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // ── Canvas Setup (T010) ─────────────────────────────────────────────
+  function setupCanvas(img) {
+    const container = $('canvasContainer');
+    const maxW = container.clientWidth || 800;
+    const maxH = 600;
+    canvasScale = Math.min(maxW / img.width, maxH / img.height, 1);
+    canvas.width = Math.round(img.width * canvasScale);
+    canvas.height = Math.round(img.height * canvasScale);
+    renderCanvas();
+  }
+
+  // ── Canvas Rendering (T011, T014) ───────────────────────────────────
+  function renderCanvas() {
+    if (!baseMapImage) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(baseMapImage, 0, 0, canvas.width, canvas.height);
+
+    spots.forEach((spot, idx) => {
+      const x = spot.boundingBox.x * canvasScale;
+      const y = spot.boundingBox.y * canvasScale;
+      const w = spot.boundingBox.width * canvasScale;
+      const h = spot.boundingBox.height * canvasScale;
+
+      // Preview overlay (T014)
+      if (spot.asset && spotImages[spot.asset.sourceJobId + '_' + spot.asset.selectedView]) {
+        const thumb = spotImages[spot.asset.sourceJobId + '_' + spot.asset.selectedView];
+        ctx.globalAlpha = 0.6;
+        ctx.drawImage(thumb, x, y, w, h);
+        ctx.globalAlpha = 1;
+      }
+
+      const isSelected = idx === selectedSpotIndex;
+      ctx.fillStyle = isSelected ? 'rgba(223,184,103,0.15)' : 'rgba(255,255,255,0.08)';
+      ctx.fillRect(x, y, w, h);
+      ctx.strokeStyle = isSelected ? '#dfb867' : 'rgba(255,255,255,0.5)';
+      ctx.lineWidth = isSelected ? 2 : 1;
+      ctx.setLineDash(isSelected ? [] : [5, 3]);
+      ctx.strokeRect(x, y, w, h);
+      ctx.setLineDash([]);
+
+      // Number label
+      ctx.fillStyle = isSelected ? '#dfb867' : '#fff';
+      ctx.font = 'bold 14px Cairo';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      const labelX = x + w / 2;
+      const labelY = y + 14;
+      ctx.beginPath();
+      ctx.arc(labelX, labelY, 11, 0, Math.PI * 2);
+      ctx.fillStyle = isSelected ? 'rgba(223,184,103,0.9)' : 'rgba(0,0,0,0.7)';
+      ctx.fill();
+      ctx.fillStyle = isSelected ? '#0b1521' : '#fff';
+      ctx.fillText(spot.spotNumber, labelX, labelY);
+
+      // Building name below
+      if (spot.asset) {
+        ctx.fillStyle = 'rgba(0,0,0,0.6)';
+        const textW = Math.min(ctx.measureText(spot.asset.buildingName).width + 10, w);
+        ctx.fillRect(x + (w - textW) / 2, y + h - 22, textW, 18);
+        ctx.fillStyle = '#dfb867';
+        ctx.font = 'bold 10px Cairo';
+        ctx.textAlign = 'center';
+        ctx.fillText(spot.asset.buildingName, x + w / 2, y + h - 12);
+      }
+    });
+
+    // Drawing rectangle
+    if (isDrawing && drawStart && drawCurrent) {
+      const x = Math.min(drawStart.x, drawCurrent.x);
+      const y = Math.min(drawStart.y, drawCurrent.y);
+      const w = Math.abs(drawCurrent.x - drawStart.x);
+      const h = Math.abs(drawCurrent.y - drawStart.y);
+      ctx.strokeStyle = '#dfb867';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([8, 4]);
+      ctx.strokeRect(x, y, w, h);
+      ctx.setLineDash([]);
+      ctx.fillStyle = 'rgba(223,184,103,0.1)';
+      ctx.fillRect(x, y, w, h);
+    }
+  }
+
+  // ── Canvas Drawing Interaction (T011, T030) ─────────────────────────
+  function getCanvasPos(e) {
+    const rect = canvas.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    return { x: clientX - rect.left, y: clientY - rect.top };
+  }
+
+  function canvasToMap(pos) {
+    return { x: Math.round(pos.x / canvasScale), y: Math.round(pos.y / canvasScale) };
+  }
+
+  canvas.addEventListener('mousedown', e => {
+    if (e.button === 2) return;
+    if (selectedAsset) {
+      assignAssetToSpotAtPos(getCanvasPos(e));
+      return;
+    }
+    const pos = getCanvasPos(e);
+    const clicked = findSpotAtPos(pos);
+    if (clicked !== -1) {
+      selectedSpotIndex = clicked;
+      renderCanvas();
+      updateSpotList();
+      return;
+    }
+    isDrawing = true;
+    drawStart = pos;
+    drawCurrent = pos;
+  });
+
+  canvas.addEventListener('mousemove', e => {
+    if (!isDrawing) return;
+    drawCurrent = getCanvasPos(e);
+    renderCanvas();
+  });
+
+  canvas.addEventListener('mouseup', e => {
+    if (!isDrawing) return;
+    isDrawing = false;
+    drawCurrent = getCanvasPos(e);
+    finalizeRect();
+  });
+
+  // Touch support (T030)
+  canvas.addEventListener('touchstart', e => {
+    e.preventDefault();
+    if (selectedAsset) {
+      assignAssetToSpotAtPos(getCanvasPos(e));
+      return;
+    }
+    const pos = getCanvasPos(e);
+    const clicked = findSpotAtPos(pos);
+    if (clicked !== -1) {
+      selectedSpotIndex = clicked;
+      renderCanvas();
+      updateSpotList();
+      return;
+    }
+    isDrawing = true;
+    drawStart = pos;
+    drawCurrent = pos;
+  }, { passive: false });
+
+  canvas.addEventListener('touchmove', e => {
+    e.preventDefault();
+    if (!isDrawing) return;
+    drawCurrent = getCanvasPos(e);
+    renderCanvas();
+  }, { passive: false });
+
+  canvas.addEventListener('touchend', e => {
+    if (!isDrawing) return;
+    isDrawing = false;
+    finalizeRect();
+  });
+
+  function finalizeRect() {
+    if (!drawStart || !drawCurrent) return;
+    const mapStart = canvasToMap(drawStart);
+    const mapEnd = canvasToMap(drawCurrent);
+    const x = Math.min(mapStart.x, mapEnd.x);
+    const y = Math.min(mapStart.y, mapEnd.y);
+    const w = Math.abs(mapEnd.x - mapStart.x);
+    const h = Math.abs(mapEnd.y - mapStart.y);
+
+    if (w < 50 || h < 50) { drawStart = null; drawCurrent = null; renderCanvas(); return; }
+    if (spots.length >= 15) { drawStart = null; drawCurrent = null; renderCanvas(); return; }
+
+    spots.push({
+      spotNumber: spots.length + 1,
+      boundingBox: { x, y, width: w, height: h },
+      sourceJobId: '',
+      sourceService: null,
+      selectedView: '',
+      asset: null,
+    });
+
+    drawStart = null;
+    drawCurrent = null;
+    selectedSpotIndex = spots.length - 1;
+    renderCanvas();
+    updateSpotList();
+  }
+
+  function findSpotAtPos(pos) {
+    const mapPos = canvasToMap(pos);
+    for (let i = spots.length - 1; i >= 0; i--) {
+      const bb = spots[i].boundingBox;
+      if (mapPos.x >= bb.x && mapPos.x <= bb.x + bb.width && mapPos.y >= bb.y && mapPos.y <= bb.y + bb.height) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
+  // Keyboard shortcuts (T030)
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Delete' && selectedSpotIndex >= 0) {
+      spots.splice(selectedSpotIndex, 1);
+      spots.forEach((s, i) => s.spotNumber = i + 1);
+      selectedSpotIndex = -1;
+      renderCanvas();
+      updateSpotList();
+    }
+    if (e.key === 'Escape') {
+      isDrawing = false;
+      drawStart = null;
+      drawCurrent = null;
+      selectedAsset = null;
+      document.querySelectorAll('.catalog-card').forEach(c => c.classList.remove('selected'));
+      canvas.classList.remove('assigning');
+      renderCanvas();
+    }
+  });
+
+  $('clearSpotsBtn').addEventListener('click', () => {
+    spots = [];
+    selectedSpotIndex = -1;
+    spotImages = {};
+    renderCanvas();
+    updateSpotList();
+  });
+
+  // ── Asset Assignment (T012) ─────────────────────────────────────────
+  function assignAssetToSpotAtPos(canvasPos) {
+    const idx = findSpotAtPos(canvasPos);
+    if (idx === -1) return;
+    assignAssetToSpot(idx, selectedAsset);
+    selectedAsset = null;
+    document.querySelectorAll('.catalog-card').forEach(c => c.classList.remove('selected'));
+    canvas.classList.remove('assigning');
+  }
+
+  function assignAssetToSpot(spotIdx, asset) {
+    const spot = spots[spotIdx];
+    const defaultView = asset.views.find(v => v.isDefault) || asset.views[0];
+    spot.sourceJobId = asset.sourceJobId;
+    spot.sourceService = asset.sourceService;
+    spot.selectedView = defaultView.key;
+    spot.asset = { ...asset, selectedView: defaultView.key, buildingName: asset.buildingName };
+    loadSpotImage(spotIdx);
+    renderCanvas();
+    updateSpotList();
+  }
+
+  function loadSpotImage(spotIdx) {
+    const spot = spots[spotIdx];
+    if (!spot.asset) return;
+    const key = spot.asset.sourceJobId + '_' + spot.asset.selectedView;
+    if (spotImages[key]) return;
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => { spotImages[key] = img; renderCanvas(); };
+    img.src = spot.asset.views.find(v => v.key === spot.asset.selectedView)?.imagePath || spot.asset.thumbnail;
+  }
+
+  // ── Catalog (T012) ──────────────────────────────────────────────────
+  async function loadCatalog() {
+    try {
+      const resp = await fetch('/api/service3/discover-assets', { method: 'POST' });
+      const data = await resp.json();
+      assets = data.assets || [];
+      renderCatalog();
+    } catch (err) {
+      $('catalogList').innerHTML = '<div class="text-red-400/60 text-xs text-center py-4">خطأ في تحميل الكتالوج</div>';
+    }
+  }
+
+  function renderCatalog() {
+    const list = $('catalogList');
+    if (assets.length === 0) {
+      list.innerHTML = '<div class="text-white/30 text-xs text-center py-8">لا توجد أصول مباني. أكمل وظيفة في الخدمة 1 أو 2 أولاً.</div>';
+      return;
+    }
+    list.innerHTML = assets.map((asset, idx) => `
+      <div class="catalog-card glass rounded-lg p-3 cursor-pointer border border-transparent hover:border-[#dfb867]/30" data-idx="${idx}">
+        <div class="flex items-start gap-2">
+          <img src="${asset.thumbnail}" class="w-12 h-12 rounded object-cover flex-shrink-0 border border-white/10" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2248%22 height=%2248%22><rect fill=%22%231a2332%22 width=%2248%22 height=%2248%22/><text x=%2224%22 y=%2228%22 text-anchor=%22middle%22 fill=%22%23666%22 font-size=%2210%22>?</text></svg>'">
+          <div class="flex-1 min-w-0">
+            <p class="text-white text-xs font-bold truncate">${asset.buildingName}</p>
+            <p class="text-white/30 text-[10px] truncate">${asset.architecturalStyle}</p>
+            <span class="inline-block mt-1 text-[9px] font-bold px-1.5 py-0.5 rounded ${asset.sourceService === 1 ? 'bg-blue-500/20 text-blue-400' : 'bg-purple-500/20 text-purple-400'}">خدمة ${asset.sourceService}</span>
+          </div>
+        </div>
+        ${asset.views.length > 1 ? `
+          <div class="mt-2 flex flex-wrap gap-1">
+            ${asset.views.map(v => `<span class="text-[9px] px-1.5 py-0.5 rounded bg-white/5 text-white/40">${v.label}</span>`).join('')}
+          </div>
+        ` : ''}
+      </div>
+    `).join('');
+
+    list.querySelectorAll('.catalog-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const idx = parseInt(card.dataset.idx);
+        document.querySelectorAll('.catalog-card').forEach(c => c.classList.remove('selected'));
+        card.classList.add('selected');
+        selectedAsset = assets[idx];
+        canvas.classList.add('assigning');
+        $('canvasInfo').textContent = 'اضغط على مستطيل لأسند: ' + selectedAsset.buildingName;
+      });
+    });
+  }
+
+  // ── Spot List (T013) ────────────────────────────────────────────────
+  function updateSpotList() {
+    const list = $('spotList');
+    if (spots.length === 0) {
+      list.innerHTML = '<div class="text-white/30 text-xs text-center py-8">ارسم مستطيلات على الخريطة أولاً</div>';
+      $('submitBtn').classList.add('hidden');
+      return;
+    }
+
+    list.innerHTML = spots.map((spot, idx) => {
+      const assigned = !!spot.asset;
+      const isSelected = idx === selectedSpotIndex;
+      return `
+        <div class="glass rounded-lg p-3 border ${isSelected ? 'border-[#dfb867]/50' : 'border-transparent'} cursor-pointer" onclick="window._selectSpot(${idx})">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="w-6 h-6 rounded-full ${assigned ? 'bg-[#dfb867]/20 text-[#dfb867]' : 'bg-white/5 text-white/40'} flex items-center justify-center text-[10px] font-black">${spot.spotNumber}</span>
+            <span class="text-xs text-white/60">${spot.boundingBox.width}×${spot.boundingBox.height}</span>
+            ${assigned ? `<span class="text-[9px] px-1.5 py-0.5 rounded bg-green-500/20 text-green-400 mr-auto">مسند</span>` : `<span class="text-[9px] px-1.5 py-0.5 rounded bg-white/5 text-white/30 mr-auto">غير مسند</span>`}
+            <button onclick="event.stopPropagation(); window._removeSpot(${idx})" class="text-red-400/40 hover:text-red-400 transition text-xs px-1" title="حذف">✕</button>
+          </div>
+          ${assigned ? `
+            <div class="flex items-center gap-2 mt-2">
+              <img src="${spot.asset.thumbnail}" class="w-8 h-8 rounded object-cover border border-white/10">
+              <div class="flex-1 min-w-0">
+                <p class="text-white text-[11px] font-bold truncate">${spot.asset.buildingName}</p>
+                <div class="mt-1">
+                  <select onchange="window._changeView(${idx}, this.value)" class="bg-white/5 border border-white/10 rounded text-[10px] text-white/60 px-1 py-0.5 w-full">
+                    ${spot.asset.views.map(v => `<option value="${v.key}" ${v.key === spot.asset.selectedView ? 'selected' : ''}>${v.label}</option>`).join('')}
+                  </select>
+                </div>
+              </div>
+            </div>
+          ` : `
+            <p class="text-white/20 text-[10px] mt-1">اختر مبنى من الكتالوج ثم اضغط هنا</p>
+          `}
+        </div>
+      `;
+    }).join('');
+
+    const allAssigned = spots.length > 0 && spots.every(s => s.asset);
+    $('submitBtn').classList.toggle('hidden', !allAssigned);
+  }
+
+  window._selectSpot = idx => {
+    if (selectedAsset) {
+      assignAssetToSpot(idx, selectedAsset);
+      selectedAsset = null;
+      document.querySelectorAll('.catalog-card').forEach(c => c.classList.remove('selected'));
+      canvas.classList.remove('assigning');
+      $('canvasInfo').textContent = 'ارسم مستطيلات لتحديد مواقع المباني';
+    } else {
+      selectedSpotIndex = idx;
+      renderCanvas();
+      updateSpotList();
+    }
+  };
+
+  window._removeSpot = idx => {
+    spots.splice(idx, 1);
+    spots.forEach((s, i) => s.spotNumber = i + 1);
+    if (selectedSpotIndex >= spots.length) selectedSpotIndex = spots.length - 1;
+    renderCanvas();
+    updateSpotList();
+  };
+
+  window._changeView = (idx, viewKey) => {
+    const spot = spots[idx];
+    if (!spot || !spot.asset) return;
+    spot.asset.selectedView = viewKey;
+    spot.selectedView = viewKey;
+    const view = spot.asset.views.find(v => v.key === viewKey);
+    if (view) {
+      const key = spot.asset.sourceJobId + '_' + viewKey;
+      delete spotImages[key];
+      loadSpotImage(idx);
+    }
+  };
+
+  // ── Submit (T016) ───────────────────────────────────────────────────
+  $('submitBtn').addEventListener('click', async () => {
+    const districtName = districtNameInput.value.trim().replace(/<[^>]*>/g, '').slice(0, 200);
+    if (!districtName || !baseMapFile || spots.length === 0) return;
+    if (!spots.every(s => s.asset)) { alert('يرجى إسناد جميع المواقع'); return; }
+
+    const spotsPayload = spots.map(s => ({
+      x: s.boundingBox.x,
+      y: s.boundingBox.y,
+      width: s.boundingBox.width,
+      height: s.boundingBox.height,
+      jobId: s.sourceJobId,
+      viewType: s.selectedView || 'aerial',
+    }));
+
+    const formData = new FormData();
+    formData.append('baseMap', baseMapFile);
+    formData.append('districtName', districtName);
+    formData.append('spots', JSON.stringify(spotsPayload));
+
+    try {
+      const resp = await fetch('/api/service3/compose', { method: 'POST', body: formData });
+      const data = await resp.json();
+      if (!resp.ok) { alert(data.error || 'خطأ في الإرسال'); return; }
+
+      currentJobId = data.jobId;
+      currentVersion = data.version || 1;
+      showProgress(data.jobId);
+    } catch (err) {
+      alert('خطأ في الاتصال: ' + err.message);
+    }
+  });
+
+  // ── Progress Polling (T020) ─────────────────────────────────────────
+  function showProgress(jobId) {
+    $('editorSection').classList.add('hidden');
+    $('progressSection').classList.remove('hidden');
+    $('resultsSection').classList.add('hidden');
+    $('progressJobId').textContent = 'رقم الوظيفة: ' + jobId;
+
+    setStageState('stageCompositing', 'processing');
+    setStageState('stageBlending', 'pending');
+    setStageState('stageEdgeControl', 'pending');
+
+    pollTimer = setInterval(() => pollJob(jobId), 3000);
+    pollJob(jobId);
+  }
+
+  async function pollJob(jobId) {
+    try {
+      const resp = await fetch('/api/service3/job/' + jobId);
+      const data = await resp.json();
+      if (!resp.ok && data.error === 'Job not found') return;
+
+      const stages = data.stages || data.pipelineStages || {};
+      updateStageDisplay(stages);
+
+      if (data.status === 'done') {
+        clearInterval(pollTimer);
+        outputs = data.outputs || {};
+        showResults(data);
+      } else if (data.status === 'failed') {
+        clearInterval(pollTimer);
+        $('progressSection').innerHTML = '<div class="glass-dark rounded-2xl p-8 text-center"><p class="text-red-400 font-bold text-lg">فشلت المعالجة</p><p class="text-white/40 text-sm mt-2">حاول مرة أخرى</p><button onclick="location.reload()" class="mt-4 bg-white/10 px-4 py-2 rounded-lg text-sm font-bold">العودة</button></div>';
+      }
+    } catch {}
+  }
+
+  function setStageState(id, state) {
+    const el = $(id);
+    el.className = 'stage-badge w-full justify-center stage-' + state;
+    const icon = el.querySelector('span');
+    if (state === 'done') icon.innerHTML = '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>';
+    else if (state === 'processing') icon.innerHTML = '<svg class="w-4 h-4 spinner" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>';
+    else if (state === 'skipped') icon.innerHTML = '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636"/></svg>';
+    else icon.innerHTML = '<span class="w-4 h-4 rounded-full border-2 border-current"></span>';
+  }
+
+  function updateStageDisplay(stages) {
+    const order = ['compositing', 'blending', 'edgeControl'];
+    const ids = ['stageCompositing', 'stageBlending', 'stageEdgeControl'];
+    for (let i = 0; i < order.length; i++) {
+      const state = stages[order[i]];
+      if (state === 'done' || state === 'processing' || state === 'skipped') {
+        setStageState(ids[i], state);
+      } else {
+        const prevDone = i === 0 || stages[order[i - 1]] === 'done' || stages[order[i - 1]] === 'skipped';
+        setStageState(ids[i], prevDone ? 'processing' : 'pending');
+      }
+    }
+  }
+
+  // ── Results (T025) ──────────────────────────────────────────────────
+  function showResults(data) {
+    $('progressSection').classList.add('hidden');
+    $('resultsSection').classList.remove('hidden');
+    $('versionHistory').classList.add('hidden');
+
+    const finalUrl = data.outputs?.final || data.outputs?.blended || data.outputs?.rawComposite;
+    $('finalImage').src = finalUrl;
+    $('downloadBtn').onclick = () => window.open(finalUrl, '_blank');
+    $('resultVersion').textContent = 'الإصدار ' + (data.version || 1);
+
+    // Stage badges
+    const badges = $('resultStageBadges');
+    const stages = data.stages || data.pipelineStages || {};
+    badges.innerHTML = [
+      { label: 'التركيب', key: 'compositing' },
+      { label: 'الدمج', key: 'blending' },
+      { label: 'التحكم بالحواف', key: 'edgeControl' },
+    ].map(s => {
+      const state = stages[s.key] || 'pending';
+      return `<span class="stage-badge stage-${state}">${state === 'done' ? '✓' : state === 'skipped' ? '⊘' : '●'} ${s.label}</span>`;
+    }).join('');
+
+    // Warnings
+    const warnings = data.warnings || [];
+    const warningsEl = $('resultWarnings');
+    if (warnings.length) {
+      warningsEl.classList.remove('hidden');
+      warningsEl.innerHTML = warnings.map(w => `<div class="bg-amber-900/20 border border-amber-500/20 rounded-lg p-3 text-amber-200 text-xs">${w}</div>`).join('');
+    } else {
+      warningsEl.classList.add('hidden');
+    }
+
+    // Compare tabs
+    document.querySelectorAll('.compare-tab').forEach(tab => {
+      tab.onclick = () => {
+        document.querySelectorAll('.compare-tab').forEach(t => { t.classList.remove('active'); t.classList.add('text-white/40'); t.classList.remove('text-[#dfb867]'); t.style.borderBottomColor = 'transparent'; });
+        tab.classList.add('active'); tab.classList.remove('text-white/40'); tab.classList.add('text-[#dfb867]'); tab.style.borderBottomColor = '#dfb867';
+        const view = tab.dataset.view;
+        const url = view === 'final' ? data.outputs?.final : view === 'blended' ? data.outputs?.blended : data.outputs?.rawComposite;
+        if (url) $('finalImage').src = url;
+      };
+    });
+
+    // Reprocess
+    $('reprocessBtn').onclick = () => {
+      $('resultsSection').classList.add('hidden');
+      $('editorSection').classList.remove('hidden');
+      renderCanvas();
+    };
+  }
+
+})();
+
+  if (window.self !== window.top) {
+    var _nav = document.getElementById('s3-navbar');
+    if (_nav) _nav.style.display = 'none';
+    var _main = document.querySelector('main');
+    if (_main) _main.classList.remove('pt-24');
+  }
+</script>
+</body>
+</html>
