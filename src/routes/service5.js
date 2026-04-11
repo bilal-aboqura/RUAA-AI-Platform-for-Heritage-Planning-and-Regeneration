@@ -294,6 +294,23 @@ function fileToDataUri(filePath) {
   return `data:${mime};base64,${fs.readFileSync(filePath).toString('base64')}`;
 }
 
+// Convert a local file path to a publicly accessible URL for Replicate
+function fileToPublicUrl(filePath) {
+  const publicRoot = path.join(__dirname, '../../public');
+  const relative = path.relative(publicRoot, filePath).replace(/\\/g, '/');
+  return `${APP_BASE_URL.replace(/\/+$/, '')}/${relative}`;
+}
+
+// Smart resolver: use public URL when file is under /public/, fallback to base64
+function fileToReplicateInput(filePath) {
+  try {
+    const publicRoot = path.join(__dirname, '../../public');
+    const rel = path.relative(publicRoot, filePath);
+    if (!rel.startsWith('..')) return fileToPublicUrl(filePath);
+  } catch {}
+  return fileToDataUri(filePath);
+}
+
 function downloadFile(url, dest) {
   return new Promise((resolve, reject) => {
     const proto = String(url || '').startsWith('https') ? https : http;
@@ -453,7 +470,7 @@ function buildReplicate3DPrompt(building, context) {
 
 function buildReplicateAttemptInputs(building, context) {
   const images = getBuildingReferenceImages(building, context);
-  const imageUris = images.map(fileToDataUri);
+  const imageUris = images.map(fileToReplicateInput);
   const config = buildReplicate3DGenerationConfig(building, context);
   const prompt = buildReplicate3DPrompt(building, context);
   const attempts = [];
@@ -1386,7 +1403,7 @@ Return ONLY this JSON object:
   "reason": "brief explanation",
   "notes": "brief modeling guidance"
 }`,
-        image_input: rasterPaths.map(fileToDataUri),
+        image_input: rasterPaths.map(fileToReplicateInput),
         max_completion_tokens: 500,
         temperature: 0.1,
       },
@@ -3648,7 +3665,7 @@ async function renderNanoBananaImage(prompt, referencePaths, pngPath, jpgPath, v
 
   const input = {
     prompt,
-    image_input: referencePaths.map(fileToDataUri),
+    image_input: referencePaths.map(fileToReplicateInput),
     output_format: 'png',
     aspect_ratio: inferAspectRatio(view),
     resolution: '1K',

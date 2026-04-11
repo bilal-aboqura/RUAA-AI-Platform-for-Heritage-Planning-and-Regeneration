@@ -58,6 +58,7 @@ const upload = multer({
 });
 
 const replicate = new Replicate({ auth: process.env.REPLICATE_API_TOKEN });
+const APP_BASE_URL = (process.env.APP_BASE_URL || 'http://localhost:3000').replace(/\/+$/, '');
 const DEFAULT_RESTORATION_PROMPT = `Carefully restore and clean this historic building while strictly preserving the original structure exactly as it appears in the image.
 Do NOT change the camera angle, perspective, framing, or lighting.
 Do NOT reconstruct missing parts, invent details, or add any new decorations, ornaments, or architectural elements.
@@ -393,15 +394,16 @@ router.post('/restore', (req, res, next) => {
 
       console.log(`Processing step 1 image ${idx + 1}/${req.files.length}: ${cleanName}`);
 
-      const pngBuf = await toPngBuffer(file.path);
-      const dataUrl = toDataURL(pngBuf);
+      // Use public URL so Replicate can fetch the image directly (faster, no base64 bloat)
+      const uploadFileName = path.basename(file.path);
+      const imageUrl = `${APP_BASE_URL}/uploads/${uploadFileName}`;
 
       let nanoBananaUrl;
       try {
         const nbOutput = await replicate.run('google/nano-banana-pro', {
           input: {
             prompt: finalPrompt,
-            image_input: [dataUrl],
+            image_input: [imageUrl],
             aspect_ratio: 'match_input_image',
             resolution: '1K',
             output_format: 'jpg',

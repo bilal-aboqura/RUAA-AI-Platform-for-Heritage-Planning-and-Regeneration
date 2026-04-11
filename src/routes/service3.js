@@ -233,8 +233,14 @@ async function blendWithFlux(jobDir, compositeBuffer, mapWidth, mapHeight) {
   const blendedPath = path.join(jobDir, 'district_2.5d_final.webp');
 
   try {
-    // Encode composite as data URI for the Replicate SDK
-    const dataUri = `data:image/png;base64,${compositeBuffer.toString('base64')}`;
+    // Save the composite to disk so Replicate can fetch it via public URL
+    // (avoids huge base64 payloads that the model can't preview/process reliably)
+    const compositePng = path.join(jobDir, 'composite_for_blend.png');
+    fs.writeFileSync(compositePng, compositeBuffer);
+    const APP_BASE_URL = (process.env.APP_BASE_URL || 'http://localhost:3000').replace(/\/+$/, '');
+    const publicRoot = path.join(__dirname, '../../public');
+    const relativePath = path.relative(publicRoot, compositePng).replace(/\\/g, '/');
+    const compositeUrl = `${APP_BASE_URL}/${relativePath}`;
 
     // Determine a reasonable aspect ratio from the map dimensions
     const aspectRatio = computeAspectRatioLabel(mapWidth, mapHeight);
@@ -244,7 +250,7 @@ async function blendWithFlux(jobDir, compositeBuffer, mapWidth, mapHeight) {
     const output = await replicate.run(BLEND_MODEL, {
       input: {
         prompt:          BLEND_PROMPT,
-        input_images:    [dataUri],
+        input_images:    [compositeUrl],
         aspect_ratio:    aspectRatio,
         output_format:   'webp',
         output_quality:  95,

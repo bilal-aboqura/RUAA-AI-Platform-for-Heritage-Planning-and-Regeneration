@@ -3151,6 +3151,24 @@ function fileToDataUri(filePath) {
   return `data:${mime};base64,${fs.readFileSync(filePath).toString('base64')}`;
 }
 
+// Convert a local file path to a publicly accessible URL for Replicate
+function fileToPublicUrl(filePath) {
+  const publicRoot = path.join(__dirname, '../../public');
+  const relative = path.relative(publicRoot, filePath).replace(/\\/g, '/');
+  const baseUrl = (process.env.APP_BASE_URL || 'http://localhost:3000').replace(/\/+$/, '');
+  return `${baseUrl}/${relative}`;
+}
+
+// Smart resolver: use public URL when file is under /public/, fallback to base64
+function fileToReplicateInput(filePath) {
+  try {
+    const publicRoot = path.join(__dirname, '../../public');
+    const rel = path.relative(publicRoot, filePath);
+    if (!rel.startsWith('..')) return fileToPublicUrl(filePath);
+  } catch {}
+  return fileToDataUri(filePath);
+}
+
 function downloadFile(url, dest) {
   return new Promise((resolve, reject) => {
     const proto = String(url || '').startsWith('https') ? https : http;
@@ -3497,7 +3515,7 @@ async function refinePresentationBoardWithNanoBanana(basePath, referenceAssets, 
     try {
       const input = {
         prompt,
-        image_input: paths.map(fileToDataUri),
+        image_input: paths.map(fileToReplicateInput),
         output_format: 'png',
         aspect_ratio: '16:9',
         resolution: '1K',

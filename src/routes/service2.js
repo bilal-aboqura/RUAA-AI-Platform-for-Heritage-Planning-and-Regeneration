@@ -76,6 +76,18 @@ function validateReferenceFiles(files = []) {
   return null;
 }
 
+// Convert a local file path to a publicly accessible URL for Replicate
+// e.g. /app/public/uploads/1234_photo.jpg → https://ruaa-ai.cloud/uploads/1234_photo.jpg
+const APP_BASE_URL = (process.env.APP_BASE_URL || 'http://localhost:3000').replace(/\/+$/, '');
+
+function imagePathToPublicUrl(filePath) {
+  // Extract the relative path under /public/
+  const publicRoot = path.join(__dirname, '../../public');
+  const relative = path.relative(publicRoot, filePath).replace(/\\/g, '/');
+  return `${APP_BASE_URL}/${relative}`;
+}
+
+// Fallback: base64 data URI (only used when URL construction fails)
 function imagePathToDataUri(filePath) {
   const ext = path.extname(filePath).slice(1).toLowerCase();
   const mime = ext === 'png' ? 'image/png' : 'image/jpeg';
@@ -86,7 +98,10 @@ function buildReferenceImageInputs(imagePaths = [], limit = 10) {
   return (imagePaths || [])
     .filter(p => RASTER_REFERENCE_EXTENSIONS.has(path.extname(p).toLowerCase()))
     .slice(0, limit)
-    .map(imagePathToDataUri);
+    .map(p => {
+      try { return imagePathToPublicUrl(p); }
+      catch { return imagePathToDataUri(p); }
+    });
 }
 
 function getFloorCount(floors) {
@@ -1761,10 +1776,8 @@ router.post('/image-to-prompt', (req, res, next) => {
 
   try {
     const imageToPromptPrompts = buildService2ImageToPromptPrompts(promptConfig);
-    const ext  = path.extname(req.file.path).slice(1).toLowerCase();
-    const mime = ext === 'png' ? 'image/png' : 'image/jpeg';
-    const b64  = fs.readFileSync(req.file.path).toString('base64');
-    const dataUri = `data:${mime};base64,${b64}`;
+    const uploadFileName = path.basename(req.file.path);
+    const imageUrl = `${APP_BASE_URL}/uploads/${uploadFileName}`;
 
     console.log(`\n[Image→Prompt] GPT-4o analyzing: ${req.file.originalname}`);
 
@@ -1772,7 +1785,7 @@ router.post('/image-to-prompt', (req, res, next) => {
       input: {
         system_prompt: imageToPromptPrompts.systemPrompt,
         prompt: imageToPromptPrompts.userPrompt,
-        image_input: [dataUri],
+        image_input: [imageUrl],
         max_completion_tokens: 300,
         temperature: 0.5,
       },
