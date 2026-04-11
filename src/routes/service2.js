@@ -23,7 +23,7 @@ const SERVICE_02_DEFINITION = 'Generate high-quality architectural rehabilitatio
 const DEFAULT_VIEW_COUNT = 8;
 const RASTER_REFERENCE_EXTENSIONS = new Set(['.jpg', '.jpeg', '.png', '.tif', '.tiff', '.webp']);
 const DOCUMENT_REFERENCE_EXTENSIONS = new Set(['.pdf', '.ppt', '.pptx']);
-const SERVICE_02_IMAGE_MODEL = 'google/nano-banana-2';
+const SERVICE_02_IMAGE_MODEL = 'google/nano-banana-pro';
 const SERVICE_02_IMAGE_RESOLUTION = '1K';
 
 function summarizeReferenceInputs(files = []) {

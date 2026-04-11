@@ -65,7 +65,7 @@ const SERVICE_05_SCENE_ANALYSIS_MODEL = process.env.SERVICE_05_SCENE_ANALYSIS_MO
 const APP_BASE_URL = process.env.APP_BASE_URL || 'http://localhost:3000';
 const SERVICE_05_IMAGE_MODEL = process.env.SERVICE_05_IMAGE_MODEL
   || process.env.NANO_BANANA_IMAGE_MODEL
-  || 'google/nano-banana-2:b7866a051519a43b5dda3ee54a3013c4813939a18af2b627f8f1dba876efd443';
+  || 'google/nano-banana-pro';
 const replicate = Replicate && REPLICATE_API_TOKEN ? new Replicate({ auth: REPLICATE_API_TOKEN }) : null;
 
 [UPLOADS_DIR, OUTPUTS_DIR].forEach(dir => fs.mkdirSync(dir, { recursive: true }));

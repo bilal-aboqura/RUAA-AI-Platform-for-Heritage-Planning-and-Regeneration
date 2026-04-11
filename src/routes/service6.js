@@ -95,7 +95,7 @@ const PDF_FONT_TAHOMA_BOLD = _fontResolve([
 const REPLICATE_API_TOKEN = process.env.REPLICATE_API_TOKEN || '';
 const SERVICE_06_BOARD_IMAGE_MODEL = process.env.SERVICE_06_BOARD_IMAGE_MODEL
   || process.env.NANO_BANANA_IMAGE_MODEL
-  || 'google/nano-banana-2:b7866a051519a43b5dda3ee54a3013c4813939a18af2b627f8f1dba876efd443';
+  || 'google/nano-banana-pro';
 const replicate = Replicate && REPLICATE_API_TOKEN ? new Replicate({ auth: REPLICATE_API_TOKEN }) : null;
 
 [UPLOADS_DIR, OUTPUTS_DIR].forEach(dir => fs.mkdirSync(dir, { recursive: true }));
@@ -4062,7 +4062,7 @@ async function buildArchitecturalPresentationPackage(subject, context, assets, o
     boardsDir,
     slideCount: slides.length,
     boardImages: slides.map(slide => slide.imagePath),
-    provider: replicate && parseBooleanLike(options.enableNanoBanana, true) ? 'replicate+nano-banana-2 + local-board-layout' : 'local-board-layout',
+    provider: replicate && parseBooleanLike(options.enableNanoBanana, true) ? 'replicate+nano-banana-pro + local-board-layout' : 'local-board-layout',
     model: replicate && parseBooleanLike(options.enableNanoBanana, true) ? SERVICE_06_BOARD_IMAGE_MODEL : 'local-architectural-board-composer-v1',
   };
 }

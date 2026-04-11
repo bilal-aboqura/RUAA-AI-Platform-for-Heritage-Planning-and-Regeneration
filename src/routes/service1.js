@@ -398,7 +398,7 @@ router.post('/restore', (req, res, next) => {
 
       let nanoBananaUrl;
       try {
-        const nbOutput = await replicate.run('google/nano-banana-2', {
+        const nbOutput = await replicate.run('google/nano-banana-pro', {
           input: {
             prompt: finalPrompt,
             image_input: [dataUrl],
@@ -437,7 +437,7 @@ router.post('/restore', (req, res, next) => {
       jobId,
       service: 1,
       stage: 'restoration_complete',
-      pipeline: 'google/nano-banana-2 -> nightmareai/real-esrgan x4',
+      pipeline: 'google/nano-banana-pro -> nightmareai/real-esrgan x4',
       processedAt: nowIso,
       step1CompletedAt: nowIso,
       upscaleCompleted: false,
