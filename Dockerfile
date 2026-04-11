@@ -54,12 +54,9 @@ COPY server.js ./
 COPY --from=builder /build/public ./public
 
 # Ensure upload / output directories exist inside the image.
-# These will be OVERRIDDEN by named volumes at runtime, so their contents
-# here act only as a safe default for the first start.
+# Named Docker volumes override these on first mount; this provides a
+# safe default and correct ownership for bind-mount deployments.
 RUN mkdir -p public/uploads public/outputs
-
-# Drop root privileges — run as the built-in non-root node user
-USER node
 
 # Expose the application port (configurable via PORT env var)
 EXPOSE 3000
