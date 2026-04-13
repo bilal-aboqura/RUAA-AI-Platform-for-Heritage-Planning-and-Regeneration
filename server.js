@@ -33,6 +33,27 @@ app.use((req, res, next) => {
     next();
 });
 
+// ── Protected pages ───────────────────────────────────────────────────────
+const PROTECTED_PAGES = [
+    '/dashboard.html',
+    '/services.html',
+    '/service1.html',
+    '/service2.html',
+    '/service3.html',
+    '/service4.html',
+    '/service5.html',
+    '/service6.html'
+];
+
+app.use((req, res, next) => {
+    const page = req.path.split('?')[0];
+    if (PROTECTED_PAGES.includes(page)) {
+        if (req.session && req.session.isAuthenticated) return next();
+        return res.redirect('/login.html');
+    }
+    next();
+});
+
 // ── Static files ──────────────────────────────────────────────────────────
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
