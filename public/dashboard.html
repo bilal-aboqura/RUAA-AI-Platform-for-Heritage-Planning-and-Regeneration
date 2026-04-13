@@ -32,9 +32,13 @@ select.field-input option{background:#102033}
 .dl-btn{display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:10px;border:1px solid #2a4a73;background:rgba(28,53,84,0.6);color:#94a3b8;font-size:12px;font-weight:700;text-decoration:none;transition:all .2s;cursor:pointer}
 .dl-btn:hover{border-color:rgba(223,184,103,0.5);color:#dfb867;background:rgba(223,184,103,0.05)}
 .dl-btn.primary{border-color:rgba(223,184,103,0.4);background:rgba(223,184,103,0.08);color:#dfb867}
+.bg-grid {
+  background-size: 50px 50px;
+  background-image: linear-gradient(to right, rgba(255, 255, 255, 0.01) 1px, transparent 1px), linear-gradient(to bottom, rgba(255, 255, 255, 0.01) 1px, transparent 1px);
+}
 </style>
 </head>
-<body class="flex h-screen overflow-hidden text-sm">
+<body class="flex h-screen overflow-hidden text-sm bg-grid relative">
 
 <!-- Sidebar -->
 <aside class="w-[270px] bg-bgDark border-l border-panelBorder flex flex-col h-full flex-shrink-0 z-10 shadow-2xl">
@@ -84,7 +88,7 @@ select.field-input option{background:#102033}
 </aside>
 
 <!-- Main -->
-<main class="flex-1 flex flex-col h-full overflow-hidden bg-bgDark">
+<main class="flex-1 flex flex-col h-full overflow-hidden">
 
   <!-- Header -->
   <header class="h-20 px-8 flex items-center justify-between border-b border-panelBorder/50 flex-shrink-0">
@@ -118,7 +122,7 @@ select.field-input option{background:#102033}
       <div class="bg-panelDark border border-panelBorder rounded-2xl p-5">
         <div class="flex items-center gap-2 mb-4">
           <span class="text-accent font-black text-sm">الخدمة 01</span>
-          <span class="text-textMuted text-sm">/ الترميم البصري — 🍌 Nano Banana ➜ ⬆ Real-ESRGAN ×4</span>
+          <span class="text-textMuted text-sm">/ الترميم البصري</span>
         </div>
         <div class="upload-zone" id="zone-s1" onclick="triggerUpload('file-s1')">
           <input type="file" id="file-s1" accept=".jpg,.jpeg,.png,.tiff,.tif,.raw" multiple onchange="s1_handleFiles(this)">
@@ -137,8 +141,6 @@ select.field-input option{background:#102033}
       <div class="bg-panelDark border border-panelBorder rounded-2xl p-5 space-y-4">
         <div class="flex items-center justify-between gap-3 flex-wrap">
           <div class="flex items-center gap-2 flex-wrap">
-            <span class="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-md bg-accent/10 text-accent border border-accent/20">🍌 Nano Banana</span>
-            <p class="text-textMuted text-xs">Fixed Restoration Prompt — fully editable</p>
           </div>
           <button onclick="s1_resetPrompt()" title="Reset to default prompt"
             class="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold text-textMuted border border-panelBorder hover:text-accent hover:border-accent/30 transition-colors">
@@ -166,13 +168,13 @@ Do not modernize the building and do not add or imagine any elements that are no
 
       <div class="bg-panelDark border border-panelBorder rounded-2xl p-5 space-y-3">
         <div>
-          <p class="text-textMuted text-xs mb-1.5">Arabic / English restoration note for Gemini <span class="text-[11px] opacity-60">(optional — appended after Gemini enhancement)</span></p>
+          <p class="text-textMuted text-xs mb-1.5">Arabic / English restoration note for Gemini</p>
           <textarea id="s1-custom-prompt" class="field-input resize-none" rows="3" dir="auto" oninput="s1_handleCustomPromptInput()"
             placeholder="Extra restoration notes in Arabic or English. Gemini will enhance them and merge with the prompt above before Nano Banana runs."></textarea>
         </div>
 
         <div class="flex flex-wrap items-center gap-3">
-          <span id="s1-enhance-status" class="text-textMuted text-xs">Arabic or English input is accepted. Gemini on Replicate will enhance it automatically and append it to the prompt above before Nano Banana runs.</span>
+          <span id="s1-enhance-status" class="text-textMuted text-xs"></span>
         </div>
 
         <div class="hidden">
@@ -271,12 +273,6 @@ Do not modernize the building and do not add or imagine any elements that are no
           <span class="text-accent font-black text-sm">الخدمة 02</span>
           <span class="text-textMuted text-sm">/ التصور المعماري الإبداعي — 🏛 SDXL · 8 زوايا</span>
         </div>
-        <div class="flex flex-wrap gap-2 mb-4">
-          <span class="px-2.5 py-1 rounded-lg bg-accent/10 border border-accent/20 text-accent text-[11px] font-bold">✦ Stable Diffusion XL</span>
-          <span class="px-2.5 py-1 rounded-lg bg-[#38bdf8]/10 border border-[#38bdf8]/20 text-[#38bdf8] text-[11px] font-bold">✦ 8 زوايا تلقائية</span>
-          <span class="px-2.5 py-1 rounded-lg bg-[#c084fc]/10 border border-[#c084fc]/20 text-[#c084fc] text-[11px] font-bold">✦ Expert Refiner</span>
-          <span class="px-2.5 py-1 rounded-lg bg-[#f59e0b]/10 border border-[#f59e0b]/20 text-[#f59e0b] text-[11px] font-bold">✦ 16:9 / 3:4 AR</span>
-        </div>
 
         <!-- Optional reference images -->
         <p class="text-textMuted text-xs font-bold mb-2">صور مرجعية (اختياري)</p>
@@ -293,7 +289,6 @@ Do not modernize the building and do not add or imagine any elements that are no
       <div class="bg-panelDark border border-panelBorder rounded-2xl p-5">
         <div class="flex items-center gap-2 mb-3">
           <span class="text-[#c084fc] font-black text-xs uppercase tracking-widest">✦ صورة → بروم</span>
-          <span class="text-textMuted text-xs">ارفع صورة واحصل على بروم احترافي لـ Stable Diffusion</span>
         </div>
 
         <label class="upload-zone cursor-pointer block" style="padding:1rem;" onclick="document.getElementById('itp-file').click()">
@@ -558,8 +553,6 @@ Do not modernize the building and do not add or imagine any elements that are no
       <div class="bg-panelDark border border-panelBorder rounded-2xl p-5">
         <div class="flex items-center justify-between mb-2">
           <div class="flex items-center gap-2">
-            <span class="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-md bg-accent/10 text-accent border border-accent/20">🧊 Replicate 3D</span>
-            <p class="text-textMuted text-xs">3D Generation Prompt — fully editable, overrides the auto-built 3D prompt</p>
           </div>
           <button onclick="s5_resetPrompt()" title="Reset to default prompt"
             class="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold text-textMuted border border-panelBorder hover:text-accent hover:border-accent/30 transition-colors">
@@ -611,8 +604,6 @@ Do not modernize the building and do not add or imagine any elements that are no
       <div class="bg-panelDark border border-panelBorder rounded-2xl p-5">
         <div class="flex items-center justify-between mb-2">
           <div class="flex items-center gap-2">
-            <span class="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-md bg-accent/10 text-accent border border-accent/20">🍌 Nano Banana Board</span>
-            <p class="text-textMuted text-xs">Board Refinement Prompt — sent to Nano Banana for presentation board enhancement</p>
           </div>
           <button onclick="s6_resetBoardPrompt()" title="Reset to default board prompt"
             class="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold text-textMuted border border-panelBorder hover:text-accent hover:border-accent/30 transition-colors">
