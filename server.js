@@ -1,6 +1,7 @@
 const express = require('express');
 const cors    = require('cors');
 const path    = require('path');
+const session = require('express-session');
 require('dotenv').config();
 
 const app  = express();
@@ -10,6 +11,19 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
+
+app.use(session({
+    secret: process.env.SESSION_SECRET || 'fallback-secret-change-me',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 24 * 60 * 60 * 1000,
+        sameSite: 'lax'
+    }
+}));
+
 app.use((req, res, next) => {
     if (req.path === '/' || req.path.endsWith('.html')) {
         res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
@@ -27,13 +41,46 @@ app.use('/outputs', (req, res, next) => {
     next();
 }, express.static(path.join(__dirname, 'public/outputs')));
 
+// ── Auth Middleware ────────────────────────────────────────────────────────
+function requireAuth(req, res, next) {
+    if (req.session && req.session.isAuthenticated) {
+        return next();
+    }
+    res.status(401).json({ error: 'Unauthorized. Please log in.' });
+}
+
+// ── Auth Routes ───────────────────────────────────────────────────────────
+app.post('/api/login', (req, res) => {
+    const { username, password } = req.body;
+    if (
+        username === process.env.ADMIN_USERNAME &&
+        password === process.env.ADMIN_PASSWORD
+    ) {
+        req.session.isAuthenticated = true;
+        return res.json({ success: true, message: 'Logged in' });
+    }
+    res.status(401).json({ success: false, error: 'Invalid credentials' });
+});
+
+app.post('/api/logout', (req, res) => {
+    req.session.destroy((err) => {
+        if (err) return res.status(500).json({ error: 'Could not log out' });
+        res.clearCookie('connect.sid', { path: '/' });
+        res.json({ success: true });
+    });
+});
+
+app.get('/api/check-auth', (req, res) => {
+    res.json({ authenticated: !!(req.session && req.session.isAuthenticated) });
+});
+
 // ── API Routes ────────────────────────────────────────────────────────────
-app.use('/api/service1', require('./src/routes/service1'));
-app.use('/api/service2', require('./src/routes/service2'));
-app.use('/api/service3', require('./src/routes/service3'));
-app.use('/api/service4', require('./src/routes/service4'));
-app.use('/api/service5', require('./src/routes/service5'));
-app.use('/api/service6', require('./src/routes/service6'));
+app.use('/api/service1', requireAuth, require('./src/routes/service1'));
+app.use('/api/service2', requireAuth, require('./src/routes/service2'));
+app.use('/api/service3', requireAuth, require('./src/routes/service3'));
+app.use('/api/service4', requireAuth, require('./src/routes/service4'));
+app.use('/api/service5', requireAuth, require('./src/routes/service5'));
+app.use('/api/service6', requireAuth, require('./src/routes/service6'));
 
 // ── Index fallback ────────────────────────────────────────────────────────
 app.get('/', (req, res) => {
