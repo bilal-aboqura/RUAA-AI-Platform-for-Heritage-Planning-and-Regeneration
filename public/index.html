@@ -12,79 +12,13 @@
 
 <body class="min-h-screen text-white relative bg-grid overflow-x-hidden">
 
-    <!-- Faint Architectural Background Elements (Global) -->
-    <div
-        class="fixed left-6 top-0 bottom-0 w-8 flex flex-col items-center justify-evenly opacity-[0.04] pointer-events-none z-0">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-8 h-8">
-            <path stroke-linecap="round" stroke-linejoin="round"
-                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-        </svg>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-8 h-8">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 2l8 4v10l-8 6-8-6V6l8-4z" />
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 22V12M12 12L4 6M12 12l8-6" />
-        </svg>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-8 h-8">
-            <path stroke-linecap="round" stroke-linejoin="round"
-                d="M4 22h16M4 22V8l8-6 8 6v14m-9-3v-5h2v5m-6-5h1m12 0h-1M6 10h1m10 0h1" />
-        </svg>
-    </div>
-    <div
-        class="fixed right-6 top-0 bottom-0 w-8 flex flex-col items-center justify-evenly opacity-[0.04] pointer-events-none z-0">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-8 h-8">
-            <path stroke-linecap="round" stroke-linejoin="round"
-                d="M3 21h18M5 21V5a2 2 0 012-2h10a2 2 0 012 2v16M9 9h6M9 14h6M9 19h6" />
-        </svg>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-8 h-8">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 2v20M8 5h8M6 9h12M4 13h16M2 17h20" />
-        </svg>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-8 h-8">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 2l8 4v10l-8 6-8-6V6l8-4z" />
-        </svg>
+    <!-- Motif Sidebar Pattern (Left) -->
+    <div id="ruaa-motif" class="fixed left-0 top-0 bottom-0 w-[85px] z-0 pointer-events-none hidden md:block"
+         style="opacity: 0.18; background-image: url('/images/ruaa-home/motif.svg'); background-repeat: repeat-y; background-position: top center; background-size: 85px auto;">
     </div>
 
-    <!-- Sticky Navbar -->
-    <nav class="fixed top-4 md:top-8 left-0 right-0 z-50 flex justify-center px-4 md:px-0">
-        <div class="bg-[#122235]/80 border border-white/10 backdrop-blur-md rounded-[18px] px-6 md:px-10 py-3.5 flex items-center justify-between w-full md:w-auto shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
-            <button id="mobile-menu-btn" class="md:hidden text-white focus:outline-none">
-                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-            </button>
-            <div class="hidden md:flex flex-col md:flex-row absolute md:relative top-full left-0 right-0 mt-2 md:mt-0 bg-[#122235]/95 md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0 items-center gap-6 md:gap-10 text-[15px] border md:border-none border-white/10 shadow-xl md:shadow-none transition-all" id="mobile-menu">
-                <a href="#hero" class="text-white hover:text-white transition font-bold relative group">
-                    الرئيسية
-                    <span class="absolute -bottom-2 left-1/2 -translate-x-1/2 w-0 h-[2px] bg-white rounded-full transition-all group-hover:w-4 hidden md:block"></span>
-                </a>
-                <a href="/services.html" class="text-white/60 hover:text-white transition font-semibold relative group">
-                    خدماتنا
-                    <span class="absolute -bottom-2 left-1/2 -translate-x-1/2 w-0 h-[2px] bg-white rounded-full transition-all group-hover:w-4 hidden md:block"></span>
-                </a>
-                <a href="#vision" class="text-white/60 hover:text-white transition font-semibold relative group">
-                    الرؤية والرسالة
-                    <span class="absolute -bottom-2 left-1/2 -translate-x-1/2 w-0 h-[2px] bg-white rounded-full transition-all group-hover:w-4 hidden md:block"></span>
-                </a>
-                <a href="#goals" class="text-white/60 hover:text-white transition font-semibold relative group">
-                    أهدافنا
-                    <span class="absolute -bottom-2 left-1/2 -translate-x-1/2 w-0 h-[2px] bg-white rounded-full transition-all group-hover:w-4 hidden md:block"></span>
-                </a>
-                <a href="#about" class="text-white/60 hover:text-white transition font-semibold relative group">
-                    عن المنصة
-                    <span class="absolute -bottom-2 left-1/2 -translate-x-1/2 w-0 h-[2px] bg-white rounded-full transition-all group-hover:w-4 hidden md:block"></span>
-                </a>
-                <a href="#story" class="text-white/60 hover:text-white transition font-semibold relative group">
-                    قصتنا
-                    <span class="absolute -bottom-2 left-1/2 -translate-x-1/2 w-0 h-[2px] bg-white rounded-full transition-all group-hover:w-4 hidden md:block"></span>
-                </a>
-                <a href="#" class="text-white/60 hover:text-white transition font-semibold">تواصل معنا</a>
-
-                <div class="hidden md:block w-px h-5 bg-white/10 mx-2"></div>
-                <div class="md:hidden w-full h-px bg-white/10 my-2"></div>
-
-                <a href="/login.html" class="text-[#dfb867] hover:text-[#f8d07a] transition font-bold">تسجيل الدخول</a>
-            </div>
-            <div class="md:hidden text-[#dfb867] font-bold">رُؤى</div>
-        </div>
-    </nav>
+    <!-- Global Navbar (auto-injected) -->
+    <script src="/js/navbar.js"></script>
 
     <!-- CONTENT ALIGNED IN GRID -->
     <div class="max-w-[1300px] mx-auto px-6 relative z-10 space-y-32 pb-20 pt-32">
@@ -93,19 +27,23 @@
         <section id="hero" class="min-h-[80vh] flex flex-col justify-center pt-20 md:pt-0">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 md:gap-16 items-center text-center lg:text-right">
                 <!-- Right: Text Content -->
-                <div class="md:pr-6 flex flex-col justify-center items-center lg:items-start order-2 lg:order-1">
+                <div class="md:pr-6 flex flex-col justify-center items-center lg:items-start order-2 lg:order-1 relative">
+                    <!-- Ambient Glow -->
+                    <div class="absolute top-1/4 -right-20 w-64 h-64 bg-[#dfb867]/5 rounded-full blur-[80px] pointer-events-none"></div>
+                    
                     <div
-                        class="inline-flex items-center mb-6 md:mb-8 bg-[#b48d3e]/10 text-[#dcae4f] px-4 md:px-5 py-2 rounded-full text-[12px] md:text-[13px] font-bold border border-[#dcae4f]/20 shadow-[0_0_15px_rgba(201,162,77,0.1)]">
+                        class="inline-flex items-center mb-6 md:mb-8 bg-gradient-to-r from-[#b48d3e]/10 to-transparent text-[#dcae4f] px-5 py-2 rounded-full text-[12px] md:text-[13px] font-bold border border-[#dcae4f]/20 shadow-[0_0_20px_rgba(201,162,77,0.15)] backdrop-blur-md">
+                        <span class="w-2 h-2 rounded-full bg-[#dfb867] ml-2 animate-pulse"></span>
                         منصة ذكاء اصطناعي متخصصة في التراث العمراني
                     </div>
 
-                    <h1 class="text-[36px] md:text-[52px] font-black leading-[1.3] md:leading-[1.2] text-white tracking-tight mb-6 md:mb-8">
+                    <h1 class="text-[36px] md:text-[52px] lg:text-[60px] font-black leading-[1.3] md:leading-[1.15] text-white tracking-tight mb-6 md:mb-8">
                         حيث تتحوّل الأطلال<br />
-                        إلى <span class="text-[#dfb867]">رُؤى</span> مستقبلية
+                        إلى <span class="bg-gradient-to-l from-[#ba8c3e] to-[#f8d07a] text-transparent bg-clip-text drop-shadow-[0_0_25px_rgba(223,184,103,0.4)]">رُؤى</span> مستقبلية
                     </h1>
 
-                    <div class="space-y-4 pr-1">
-                        <p class="text-[17px] text-white/70 leading-8 max-w-[500px] font-medium">
+                    <div class="space-y-4 pr-1 relative z-10">
+                        <p class="text-[17px] text-white/80 leading-8 max-w-[500px] font-medium text-shadow-sm">
                             منصة رُؤى منظومة عمل رقمية متكاملة تستخدم الذكاء الاصطناعي لتحليل النطاقات التراثية وتوليد
                             سيناريوهات تأهيل عمراني شاملة.
                         </p>
@@ -117,31 +55,31 @@
                 </div>
 
                 <!-- Left: Image Slider -->
-                <div class="relative w-full max-w-[460px] mx-auto lg:mx-0 lg:justify-self-end order-1 lg:order-2 mt-10 lg:mt-0 px-4 md:px-0">
-                    <div class="absolute -bottom-8 -right-4 md:-right-8 w-32 md:w-40 h-32 md:h-40 opacity-30 z-0"
+                <div class="relative w-full max-w-[460px] mx-auto lg:mx-0 lg:justify-self-end order-1 lg:order-2 mt-10 lg:mt-0 px-4 md:px-0 group">
+                    <div class="absolute -bottom-8 -right-4 md:-right-8 w-32 md:w-40 h-32 md:h-40 opacity-30 z-0 transition-transform duration-700 group-hover:scale-110"
                         style="background-image: radial-gradient(circle at center, #c9a24d 2px, transparent 2.5px); background-size: 16px 16px;">
                     </div>
                     <div
-                        class="relative w-full aspect-[4/4.5] rounded-[24px] md:rounded-3xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-10 border border-white/5">
-                        <img src="/images/بعد الترميم.jpeg" class="absolute inset-0 w-full h-full object-cover" />
-                        <img src="/images/قبل الترميم.png" class="absolute inset-0 w-full h-full object-cover"
+                        class="relative w-full aspect-[4/4.5] rounded-[24px] md:rounded-3xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-10 border border-white/10 transition-all duration-700 group-hover:shadow-[0_25px_60px_rgba(223,184,103,0.2)] group-hover:-translate-y-2">
+                        <img src="/images/بعد الترميم.jpeg" class="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" />
+                        <img src="/images/قبل الترميم.png" class="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
                             style="clip-path: polygon(0 0, 50% 0, 50% 100%, 0 100%);" />
                         <div
-                            class="absolute inset-y-0 left-1/2 w-[2px] bg-[#dfb867] -translate-x-1/2 shadow-[0_0_15px_rgba(223,184,103,0.8)]">
+                            class="absolute inset-y-0 left-1/2 w-[2px] bg-[#dfb867] -translate-x-1/2 shadow-[0_0_20px_rgba(223,184,103,0.9)]">
                         </div>
                         <div
-                            class="absolute top-[50%] left-1/2 w-8 h-8 md:w-9 md:h-9 bg-[#dfb867] rounded-full flex items-center justify-center shadow-lg -translate-x-1/2 -translate-y-1/2 border-[3px] border-[#0b1521] cursor-pointer">
-                            <svg class="w-3.5 h-3.5 md:w-4 md:h-4 text-[#0b1521]" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                                stroke-width="3">
+                            class="absolute top-[50%] left-1/2 w-8 h-8 md:w-10 md:h-10 bg-[#dfb867] rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(223,184,103,0.6)] -translate-x-1/2 -translate-y-1/2 border-[3px] border-[#0b1521] cursor-pointer transition-transform duration-300 hover:scale-110 group-hover:shadow-[0_0_30px_rgba(223,184,103,0.8)]">
+                            <svg class="w-4 h-4 md:w-5 md:h-5 text-[#0b1521]" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                stroke-width="2.5">
                                 <path stroke-linecap="round" stroke-linejoin="round"
                                     d="M15 19l-7-7 7-7 M9 19l7-7-7-7" />
                             </svg>
                         </div>
                         <div
-                            class="absolute top-4 left-4 md:top-5 md:left-5 bg-[#254b73] text-white text-[10px] md:text-[11px] px-3 md:px-4 py-1 md:py-1.5 rounded-full font-bold shadow-lg">
+                            class="absolute top-4 left-4 md:top-5 md:left-5 bg-[#254b73]/90 backdrop-blur-sm text-white text-[10px] md:text-[11px] px-4 py-1.5 rounded-full font-bold shadow-lg border border-white/10">
                             قبل</div>
                         <div
-                            class="absolute top-4 right-4 md:top-5 md:right-5 bg-[#dfb867] text-[#0b1521] text-[10px] md:text-[11px] px-3 md:px-4 py-1 md:py-1.5 rounded-full font-bold shadow-lg">
+                            class="absolute top-4 right-4 md:top-5 md:right-5 bg-[#dfb867]/90 backdrop-blur-sm text-[#0b1521] text-[10px] md:text-[11px] px-4 py-1.5 rounded-full font-bold shadow-lg border border-[#dfb867]/20">
                             بعد</div>
                     </div>
                 </div>
@@ -150,34 +88,31 @@
             <div class="flex flex-col-reverse lg:grid lg:grid-cols-2 gap-10 lg:gap-16 items-center lg:items-end mt-12 md:mt-16 pb-6">
                 <!-- Left Column: Aligning with Image -->
                 <div class="flex justify-center lg:justify-start gap-8 md:gap-12 lg:gap-16 justify-self-center lg:justify-self-end w-full max-w-[460px]">
-                    <div class="flex flex-col text-center lg:text-right w-20 md:w-24">
-                        <div class="text-[28px] md:text-[36px] font-black text-[#dfb867] mb-0 leading-tight">100%</div>
-                        <p class="text-[10px] md:text-[11px] text-white/50 leading-relaxed font-semibold">مخرجات قابلة للتطبيق
-                            الأكاديمي</p>
+                    <div class="flex flex-col text-center lg:text-right w-20 md:w-24 group cursor-default">
+                        <div class="text-[28px] md:text-[36px] font-black bg-gradient-to-b from-[#f8d07a] to-[#ba8c3e] text-transparent bg-clip-text mb-0 leading-tight drop-shadow-[0_2px_10px_rgba(223,184,103,0.3)] transition-all duration-300 group-hover:drop-shadow-[0_2px_15px_rgba(223,184,103,0.6)] group-hover:-translate-y-1">100%</div>
+                        <p class="text-[10px] md:text-[11px] text-white/50 leading-relaxed font-semibold transition-colors duration-300 group-hover:text-white/80">مخرجات قابلة للتطبيق الأكاديمي</p>
                     </div>
-                    <div class="flex flex-col text-center lg:text-right w-20 md:w-24">
-                        <div class="text-[28px] md:text-[36px] font-black text-[#dfb867] mb-0 leading-tight">6+</div>
-                        <p class="text-[10px] md:text-[11px] text-white/50 leading-relaxed font-semibold">محركات ذكاء اصطناعي متكاملة
-                        </p>
+                    <div class="flex flex-col text-center lg:text-right w-20 md:w-24 group cursor-default">
+                        <div class="text-[28px] md:text-[36px] font-black bg-gradient-to-b from-[#f8d07a] to-[#ba8c3e] text-transparent bg-clip-text mb-0 leading-tight drop-shadow-[0_2px_10px_rgba(223,184,103,0.3)] transition-all duration-300 group-hover:drop-shadow-[0_2px_15px_rgba(223,184,103,0.6)] group-hover:-translate-y-1">6+</div>
+                        <p class="text-[10px] md:text-[11px] text-white/50 leading-relaxed font-semibold transition-colors duration-300 group-hover:text-white/80">محركات ذكاء اصطناعي متكاملة</p>
                     </div>
-                    <div class="flex flex-col text-center lg:text-right w-20 md:w-24">
-                        <div class="text-[28px] md:text-[36px] font-black text-[#dfb867] mb-0 leading-tight">12+</div>
-                        <p class="text-[10px] md:text-[11px] text-white/50 leading-relaxed font-semibold">منشأة تراثية في النموذج
-                            التطبيقي</p>
+                    <div class="flex flex-col text-center lg:text-right w-20 md:w-24 group cursor-default">
+                        <div class="text-[28px] md:text-[36px] font-black bg-gradient-to-b from-[#f8d07a] to-[#ba8c3e] text-transparent bg-clip-text mb-0 leading-tight drop-shadow-[0_2px_10px_rgba(223,184,103,0.3)] transition-all duration-300 group-hover:drop-shadow-[0_2px_15px_rgba(223,184,103,0.6)] group-hover:-translate-y-1">12+</div>
+                        <p class="text-[10px] md:text-[11px] text-white/50 leading-relaxed font-semibold transition-colors duration-300 group-hover:text-white/80">منشأة تراثية في النموذج التطبيقي</p>
                     </div>
                 </div>
                 <!-- Right Column: Aligning with Text -->
-                <div class="w-full lg:pr-6 flex flex-col md:flex-row items-center justify-between gap-6 md:gap-0">
-                    <span class="text-[14px] md:text-[15px] text-white/80 font-semibold tracking-wide text-center md:text-right">
+                <div class="w-full lg:pr-6 flex flex-col md:flex-row items-center justify-between gap-6 md:gap-0 border-t border-white/20 pt-6 mt-2 relative">
+                    <span class="text-[15px] md:text-[16px] text-white/90 font-bold tracking-wide text-center md:text-right">
                         حيث يلتقي الإرث بالرؤية المستقبلية
                     </span>
-                    <a href="#">
+                    <a href="/login.html" class="group relative">
+                        <div class="absolute inset-0 bg-[#dfb867] rounded-full blur-[10px] opacity-20 group-hover:opacity-40 transition-opacity duration-300"></div>
                         <button
-                            class="bg-gradient-to-l from-[#ba8c3e] to-[#dfb867] hover:scale-105 transition-transform text-[#0a111a] px-5 py-2.5 rounded-[10px] font-bold text-[14px] flex items-center gap-2 shadow-[0_0_20px_rgba(223,184,103,0.2)]">
-                            ابدأ الآن
-                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
-                                    d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                            class="relative bg-gradient-to-l from-[#ba8c3e] to-[#f8d07a] text-[#0a111a] px-7 py-2.5 rounded-full font-bold text-[14px] flex items-center gap-2 shadow-[0_0_20px_rgba(223,184,103,0.3)] transition-all duration-300 hover:shadow-[0_0_25px_rgba(223,184,103,0.6)] group-hover:-translate-y-0.5">
+                            تسجيل الدخول
+                            <svg class="w-4 h-4 transition-transform duration-300 group-hover:-translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
                             </svg>
                         </button>
                     </a>
@@ -187,10 +122,21 @@
 
         <!-- Spacer Divider -->
         <div class="w-full h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
+    </div> <!-- End First Content Wrapper -->
 
-        <!-- VISION & MISSION SECTION -->
-        <section id="vision" class="min-h-[80vh] flex flex-col justify-center items-center relative">
+    <!-- VISION & MISSION SECTION (FULL WIDTH) -->
+    <section id="vision" class="w-full min-h-[80vh] flex flex-col justify-center items-center relative py-20 my-12">
 
+        <!-- Sleek Background Image Overlay -->
+        <div class="absolute inset-0 z-[-1] pointer-events-none">
+            <div class="absolute inset-0 w-full h-full opacity-[0.15] mix-blend-luminosity" 
+                 style="background-image: url('/images/ruaa-home/vision-bg.jpg'); background-size: cover; background-position: center; mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%); -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);">
+            </div>
+        </div>
+
+        <!-- Content constrained to max-w -->
+        <div class="max-w-[1300px] mx-auto px-6 w-full relative z-10">
+            
             <!-- Title Section -->
             <div class="flex flex-col items-center justify-center gap-4 mb-10 md:mb-16 text-center">
                 <div
@@ -261,14 +207,28 @@
                     </p>
                 </div>
 
-            </div>
-        </section>
+            </div> <!-- End 3 Cards Layout -->
+        </div> <!-- End Inner Content constrained to max-w -->
+    </section>
 
+    <!-- CONTENT ALIGNED IN GRID (PART 2 - Transition) -->
+    <div class="max-w-[1300px] mx-auto px-6 relative z-10">
         <!-- Spacer Divider -->
         <div class="w-full h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
+    </div>
 
-        <!-- GOALS SECTION -->
-        <section id="goals" class="min-h-[80vh] flex flex-col justify-center relative">
+    <!-- GOALS SECTION (FULL WIDTH) -->
+    <section id="goals" class="w-full min-h-[80vh] flex flex-col justify-center items-center relative py-20 my-12">
+
+        <!-- Sleek Background Image Overlay -->
+        <div class="absolute inset-0 z-[-1] pointer-events-none">
+            <div class="absolute inset-0 w-full h-full opacity-[0.15] mix-blend-luminosity" 
+                 style="background-image: url('/images/ruaa-home/goals-bg.jpg'); background-size: cover; background-position: center; mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%); -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);">
+            </div>
+        </div>
+
+        <!-- Content constrained to max-w -->
+        <div class="max-w-[1300px] mx-auto px-6 w-full relative z-10">
             <!-- HEADER TITLE -->
             <div class="flex flex-col items-center justify-center mb-10 text-center px-6">
                 <div
@@ -283,8 +243,17 @@
             <!-- INTERACTIVE MAP CONTAINER -->
             <div class="w-full overflow-x-auto hide-scrollbar flex items-center justify-center">
                 <div class="relative w-[1400px] h-[650px] shrink-0 mx-auto">
-                    <!-- SVG LAYER (Map and Connectors) -->
-                    <svg viewBox="0 0 1400 650" class="absolute inset-0 w-full h-full pointer-events-none z-10">
+
+                    <!-- KSA Map Image (Asset 131) -->
+                    <img
+                        src="/images/ruaa-home/Asset 131.svg"
+                        alt="خريطة المملكة العربية السعودية"
+                        class="absolute inset-0 m-auto w-[500px] h-auto opacity-95 z-10"
+                        style="left: 50%; top: 50%; transform: translate(-50%, -50%); filter: drop-shadow(0 0 30px rgba(212,169,68,0.5));"
+                    />
+
+                    <!-- SVG LAYER (Connectors only) -->
+                    <svg viewBox="0 0 1400 650" class="absolute inset-0 w-full h-full pointer-events-none z-20" xmlns:xlink="http://www.w3.org/1999/xlink">
                         <defs>
                             <linearGradient id="mapGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                                 <stop offset="0%" stop-color="#e8c77a" />
@@ -296,12 +265,6 @@
                                 <feComposite in="SourceGraphic" in2="blur" operator="over" />
                             </filter>
                         </defs>
-
-                        <!-- KSA Map Polygon -->
-                        <path
-                            d="M 580 80 L 630 30 L 680 80 L 730 110 L 800 150 L 850 180 L 860 250 L 930 350 L 910 430 L 850 540 L 750 550 L 680 560 L 630 500 L 590 460 L 550 400 L 520 300 L 500 230 L 510 150 Z"
-                            fill="url(#mapGrad)" stroke="#fff" stroke-opacity="0.3" stroke-width="2"
-                            stroke-linejoin="round" filter="url(#mapGlow)" opacity="0.95" />
 
                         <!-- CONNECTOR LINES -->
                         <path d="M 370 120 L 480 120 L 480 150 L 580 150" fill="none" stroke="#48739f" stroke-width="2"
@@ -415,6 +378,242 @@
                             توليد سيناريوهات تأهيل قابلة للتطبيق الفعلي مبنية على بيانات ميدانية دقيقة وموثقة تشمل
                             المباني والفراغات والبنية التحتية
                         </p>
+                    </div>
+                </div>
+        </div> <!-- End Inner Content -->
+    </section>
+
+    <!-- CONTENT ALIGNED IN GRID (PART 3) -->
+    <div class="max-w-[1300px] mx-auto px-6 relative z-10 space-y-32 pb-20">
+
+        <!-- Spacer Divider -->
+        <div class="w-full h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
+
+        <!-- HOW IT WORKS SECTION -->
+        <section id="how-it-works" class="flex flex-col justify-center relative py-16">
+            <!-- Section Header -->
+            <div class="flex flex-col items-center justify-center gap-4 mb-12 text-center">
+                <div class="bg-[#b48d3e]/20 text-[#dcae4f] px-6 py-1.5 rounded-full text-[13px] md:text-[15px] font-bold border border-[#dcae4f]/30 shadow-[0_0_15px_rgba(201,162,77,0.15)] backdrop-blur-sm">
+                    آلية العمل
+                </div>
+                <h2 class="text-[32px] md:text-[42px] font-black text-white mt-1 text-center">ثلاث مراحل تُحوّل البيانات إلى رُؤى قابلة للتطبيق</h2>
+                <p class="text-[14px] md:text-[16px] font-medium text-white/70 leading-[2] mt-1 text-center max-w-2xl">
+                    منهجية علمية واضحة تضمن تدفقاً منطقياً من استقبال البيانات الأولية حتى إنتاج المخرجات النهائية
+                </p>
+            </div>
+
+            <!-- Pipeline: 3 rows, each = [content card] + [node] -->
+            <div class="flex flex-col gap-0 max-w-[900px] mx-auto w-full">
+
+                <!-- ── Step 1: Inputs ── -->
+                <div class="flex items-stretch gap-6 md:gap-10" dir="rtl">
+                    <!-- Card -->
+                    <div class="flex-1 glass-box p-6 md:p-8 rounded-2xl text-right hover:border-[#dfb867]/30 transition-all duration-300 hover:shadow-[0_0_30px_rgba(223,184,103,0.08)]" style="border-color: rgba(223,184,103,0.15);">
+                        <div class="flex items-center justify-end gap-3 mb-4">
+                            <h3 class="text-[20px] md:text-[22px] font-black bg-gradient-to-l from-[#ba8c3e] to-[#f8d07a] bg-clip-text text-transparent">المدخلات</h3>
+                            <span class="text-[11px] font-semibold text-white/40 border border-white/10 px-2 py-0.5 rounded-full" dir="ltr">Data Ingestion</span>
+                        </div>
+                        <ul class="space-y-3 text-[13px] md:text-[14px] leading-[1.9] font-medium text-white/80 text-right">
+                            <li class="flex items-start gap-2 flex-row-reverse">
+                                <span class="mt-2 w-1.5 h-1.5 rounded-full bg-[#dfb867] shrink-0"></span>
+                                <span><span class="text-[#dfb867] font-bold">بيانات المنشآت التراثية:</span> مواد البناء، الحالة الإنشائية، الاستخدام الحالي والمقترح، العناصر المعمارية، القيمة التاريخية</span>
+                            </li>
+                            <li class="flex items-start gap-2 flex-row-reverse">
+                                <span class="mt-2 w-1.5 h-1.5 rounded-full bg-[#dfb867] shrink-0"></span>
+                                <span><span class="text-[#dfb867] font-bold">البيانات المكانية والتخطيطية:</span> حدود النطاق، شبكة الشوارع، الفراغات العامة، الخدمات، والإحداثيات الجغرافية الدقيقة</span>
+                            </li>
+                            <li class="flex items-start gap-2 flex-row-reverse">
+                                <span class="mt-2 w-1.5 h-1.5 rounded-full bg-[#dfb867] shrink-0"></span>
+                                <span><span class="text-[#dfb867] font-bold">مخرجات التوثيق المعماري:</span> بيانات ثلاثية الأبعاد أو خصائص مستخرجة لفهم الشكل والحجم والنسيج العمراني</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <!-- Node Column -->
+                    <div class="flex flex-col items-center shrink-0 w-[80px] md:w-[100px]">
+                        <!-- Node -->
+                        <div class="relative group mt-4">
+                            <div class="absolute inset-0 rounded-full bg-[#dfb867]/20 blur-lg group-hover:bg-[#dfb867]/35 transition-all duration-500 scale-125"></div>
+                            <div class="relative w-[64px] h-[64px] rounded-full flex items-center justify-center border-2 border-[#dfb867] bg-gradient-to-br from-[#1d3a55] to-[#0e1a2a] shadow-[0_0_20px_rgba(223,184,103,0.3)]">
+                                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#dfb867" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                    <ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v6c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/><path d="M3 11v6c0 1.66 4.03 3 9 3s9-1.34 9-3v-6"/>
+                                </svg>
+                                <span class="absolute -top-1.5 -left-1.5 w-5 h-5 rounded-full bg-[#dfb867] text-[#0b1521] text-[10px] font-black flex items-center justify-center">1</span>
+                            </div>
+                        </div>
+                        <!-- Connector line -->
+                        <div class="flex-1 w-[2px] bg-gradient-to-b from-[#dfb867]/50 to-[#48739f]/30 my-3 rounded-full min-h-[40px]"></div>
+                    </div>
+                </div>
+
+                <!-- ── Step 2: Processing ── -->
+                <div class="flex items-stretch gap-6 md:gap-10" dir="rtl">
+                    <!-- Card -->
+                    <div class="flex-1 glass-box p-6 md:p-8 rounded-2xl text-right hover:border-[#48739f]/30 transition-all duration-300 hover:shadow-[0_0_30px_rgba(72,115,159,0.08)]" style="border-color: rgba(72,115,159,0.2);">
+                        <div class="flex items-center justify-end gap-3 mb-4">
+                            <h3 class="text-[20px] md:text-[22px] font-black bg-gradient-to-l from-[#4a7fb5] to-[#a8d4f5] bg-clip-text text-transparent">المعالجة</h3>
+                            <span class="text-[11px] font-semibold text-white/40 border border-white/10 px-2 py-0.5 rounded-full" dir="ltr">AI Processing</span>
+                        </div>
+                        <ul class="space-y-3 text-[13px] md:text-[14px] leading-[1.9] font-medium text-white/80 text-right">
+                            <li class="flex items-start gap-2 flex-row-reverse">
+                                <span class="mt-2 w-1.5 h-1.5 rounded-full bg-[#7ab3e0] shrink-0"></span>
+                                <span>تقييم حالة كل مبنى وقطعة أرض وترتيبها حسب أولوية التدخل التأهيلي</span>
+                            </li>
+                            <li class="flex items-start gap-2 flex-row-reverse">
+                                <span class="mt-2 w-1.5 h-1.5 rounded-full bg-[#7ab3e0] shrink-0"></span>
+                                <span>اقتراح نوع التدخل المناسب: ترميم إنشائي، صيانة دورية، إعادة استخدام، أو حفاظ دون تغيير، مع مراعاة الحساسية الأثرية للموقع</span>
+                            </li>
+                            <li class="flex items-start gap-2 flex-row-reverse">
+                                <span class="mt-2 w-1.5 h-1.5 rounded-full bg-[#7ab3e0] shrink-0"></span>
+                                <span>استرداد التخطيط العمراني الأصيل للحي من الصور والمخططات التاريخية وتوليد مخطط مستقبلي بنفس روح النسيج العمراني الأصيل</span>
+                            </li>
+                            <li class="flex items-start gap-2 flex-row-reverse">
+                                <span class="mt-2 w-1.5 h-1.5 rounded-full bg-[#7ab3e0] shrink-0"></span>
+                                <span>مطابقة التصورات مع التضاريس الحقيقية للموقع بناءً على الإحداثيات الجغرافية</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <!-- Node Column -->
+                    <div class="flex flex-col items-center shrink-0 w-[80px] md:w-[100px]">
+                        <div class="relative group mt-4">
+                            <div class="absolute inset-0 rounded-full bg-[#48739f]/20 blur-lg group-hover:bg-[#48739f]/35 transition-all duration-500 scale-125"></div>
+                            <div class="relative w-[64px] h-[64px] rounded-full flex items-center justify-center border-2 border-[#48739f] bg-gradient-to-br from-[#1d3a55] to-[#0e1a2a] shadow-[0_0_20px_rgba(72,115,159,0.35)]">
+                                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#7ab3e0" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+                                </svg>
+                                <span class="absolute -top-1.5 -left-1.5 w-5 h-5 rounded-full bg-[#48739f] text-white text-[10px] font-black flex items-center justify-center">2</span>
+                            </div>
+                        </div>
+                        <div class="flex-1 w-[2px] bg-gradient-to-b from-[#48739f]/50 to-[#dfb867]/30 my-3 rounded-full min-h-[40px]"></div>
+                    </div>
+                </div>
+
+                <!-- ── Step 3: Outputs ── -->
+                <div class="flex items-stretch gap-6 md:gap-10" dir="rtl">
+                    <!-- Card -->
+                    <div class="flex-1 glass-box p-6 md:p-8 rounded-2xl text-right hover:border-[#dfb867]/30 transition-all duration-300 hover:shadow-[0_0_30px_rgba(223,184,103,0.1)]" style="border-color: rgba(223,184,103,0.15);">
+                        <div class="flex items-center justify-end gap-3 mb-4">
+                            <h3 class="text-[20px] md:text-[22px] font-black bg-gradient-to-l from-[#ba8c3e] to-[#f8d07a] bg-clip-text text-transparent">المخرجات</h3>
+                            <span class="text-[11px] font-semibold text-white/40 border border-white/10 px-2 py-0.5 rounded-full" dir="ltr">Final Deliverables</span>
+                        </div>
+                        <ul class="space-y-3 text-[13px] md:text-[14px] leading-[1.9] font-medium text-white/80 text-right">
+                            <li class="flex items-start gap-2 flex-row-reverse">
+                                <span class="mt-2 w-1.5 h-1.5 rounded-full bg-[#dfb867] shrink-0"></span>
+                                <span>مخطط تأهيلي شامل يوضح توزيع الوظائف وشبكة الشوارع والمباني القائمة والمقترحة</span>
+                            </li>
+                            <li class="flex items-start gap-2 flex-row-reverse">
+                                <span class="mt-2 w-1.5 h-1.5 rounded-full bg-[#dfb867] shrink-0"></span>
+                                <span>نماذج ثلاثية الأبعاد للنطاق كاملاً في ملف موحد</span>
+                            </li>
+                            <li class="flex items-start gap-2 flex-row-reverse">
+                                <span class="mt-2 w-1.5 h-1.5 rounded-full bg-[#dfb867] shrink-0"></span>
+                                <span>تقارير أكاديمية مفصلة لكل منشأة مع أولويات التدخل ومعايير الحفاظ المطبقة</span>
+                            </li>
+                            <li class="flex items-start gap-2 flex-row-reverse">
+                                <span class="mt-2 w-1.5 h-1.5 rounded-full bg-[#dfb867] shrink-0"></span>
+                                <span>لوحات معلومات توضح بصريا حالة المباني والتوزيع المكاني للتدخلات</span>
+                            </li>
+                            <li class="flex items-start gap-2 flex-row-reverse">
+                                <span class="mt-2 w-1.5 h-1.5 rounded-full bg-[#dfb867] shrink-0"></span>
+                                <span>وثيقة تأهيل شاملة جاهزة للعرض الأكاديمي والتقديم لصانعي القرار</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <!-- Node Column (no connector below last step) -->
+                    <div class="flex flex-col items-center shrink-0 w-[80px] md:w-[100px]">
+                        <div class="relative group mt-4">
+                            <div class="absolute inset-0 rounded-full bg-[#dfb867]/20 blur-lg group-hover:bg-[#dfb867]/40 transition-all duration-500 scale-125"></div>
+                            <div class="relative w-[64px] h-[64px] rounded-full flex items-center justify-center border-2 border-[#dfb867] bg-gradient-to-br from-[#1e3a20] to-[#0e1a2a] shadow-[0_0_24px_rgba(223,184,103,0.45)]">
+                                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#dfb867" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+                                </svg>
+                                <span class="absolute -top-1.5 -left-1.5 w-5 h-5 rounded-full bg-[#dfb867] text-[#0b1521] text-[10px] font-black flex items-center justify-center">3</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+
+        <!-- Spacer Divider -->
+        <div class="w-full h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
+
+
+
+        <section id="applied-model" class="min-h-[80vh] flex flex-col justify-center relative py-16 md:py-10">
+            <div class="flex flex-col items-center justify-center gap-4 mb-10 text-center">
+                <div class="bg-[#b48d3e]/20 text-[#dcae4f] px-6 py-1.5 rounded-full text-[13px] md:text-[15px] font-bold border border-[#dcae4f]/30 shadow-[0_0_15px_rgba(201,162,77,0.15)] backdrop-blur-sm">
+                    النموذج التطبيقي
+                </div>
+                <h2 class="text-[32px] md:text-[42px] font-black text-white mt-1 text-center leading-[1.3] max-w-4xl">
+                    حي سمحان بالدرعية التاريخية النموذج الأول لرُؤى التطبيقية
+                </h2>
+                <p class="text-[14px] md:text-[16px] font-medium text-white/80 leading-[2] mt-4 text-center max-w-3xl">
+                    يمثّل حي سمحان بالدرعية التاريخية النموذج التطبيقي الأول لمنصة رُؤى، ضمن إطار أطروحة دكتوراه بعنوان:
+                </p>
+                
+                <!-- Thesis Title Block -->
+                <div class="relative py-8 px-4 md:px-12 w-full max-w-4xl mt-2 overflow-hidden flex flex-col items-center justify-center min-h-[200px]">
+                    <!-- Subtle Triangle Pattern Background -->
+                    <div class="absolute inset-0 z-0 opacity-20 pointer-events-none flex justify-center items-center">
+                        <svg width="400" height="150" viewBox="0 0 400 150" class="absolute">
+                            <path d="M200,20 L220,50 L180,50 Z" fill="#48739f" opacity="0.3"/>
+                            <path d="M170,50 L190,80 L150,80 Z" fill="#48739f" opacity="0.2"/>
+                            <path d="M230,50 L250,80 L210,80 Z" fill="#48739f" opacity="0.2"/>
+                            <path d="M140,80 L160,110 L120,110 Z" fill="#48739f" opacity="0.1"/>
+                            <path d="M260,80 L280,110 L240,110 Z" fill="#48739f" opacity="0.1"/>
+                            <path d="M200,80 L220,110 L180,110 Z" fill="#48739f" opacity="0.15"/>
+                        </svg>
+                    </div>
+                    
+                    <h3 class="relative z-10 text-[20px] md:text-[28px] font-bold text-[#dfb867] text-center leading-relaxed">
+                        " تأهيل حي سمحان بالدرعية التاريخية باستخدام التقنيات الحديثة "
+                    </h3>
+                    <h4 class="relative z-10 text-[16px] md:text-[20px] font-bold text-[#dfb867] text-center leading-relaxed mt-2 tracking-wide font-sans" dir="ltr">
+                        The Rehabilitation of the Samhan Quarter<br>
+                        in Historic Diriyah with Advanced Technologies
+                    </h4>
+                    
+                    <p class="relative z-10 text-[14px] md:text-[16px] font-medium text-white/90 text-center mt-6">
+                        جامعة الملك سعود | كلية السياحة والآثار | قسم الآثار
+                    </p>
+                </div>
+                
+                <p class="text-[13px] md:text-[15px] font-medium text-white/60 leading-[2] mt-2 text-center max-w-4xl">
+                    يُثبت هذا النموذج التطبيقي إمكانية تطبيق منهجية رُؤى على جميع النطاقات التراثية في مناطق المملكة المختلفة بأنماطها المعمارية المتنوعة
+                </p>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="max-w-[800px] mx-auto w-full mt-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 rounded-2xl overflow-hidden glass-box relative" style="border: 2px solid rgba(223,184,103,0.5);">
+                    <!-- Central Cross Lines -->
+                    <div class="hidden md:block absolute top-0 bottom-0 left-1/2 w-[2px] bg-[#dfb867] opacity-50"></div>
+                    <div class="hidden md:block absolute top-1/2 left-0 right-0 h-[2px] bg-[#dfb867] opacity-50"></div>
+
+                    <!-- Stat 1 -->
+                    <div class="flex flex-col items-center justify-center p-8 md:p-10 text-center border-b-[2px] border-[#dfb867]/50 md:border-b-0">
+                        <div class="text-[44px] md:text-[56px] font-black text-[#dfb867] leading-none mb-3">6+</div>
+                        <p class="text-[18px] md:text-[22px] font-bold text-white/95 leading-[1.6]">محركات ذكاء اصطناعي عملت بالتزامن</p>
+                    </div>
+
+                    <!-- Stat 2 -->
+                    <div class="flex flex-col items-center justify-center p-8 md:p-10 text-center border-b-[2px] border-[#dfb867]/50 md:border-b-0">
+                        <div class="text-[44px] md:text-[56px] font-black text-[#dfb867] leading-none mb-3">12+</div>
+                        <p class="text-[18px] md:text-[22px] font-bold text-white/95 leading-[1.6]">منشأة تراثية تمت معالجتها في النموذج</p>
+                    </div>
+
+                    <!-- Stat 3 -->
+                    <div class="flex flex-col items-center justify-center p-8 md:p-10 text-center border-b-[2px] border-[#dfb867]/50 md:border-b-0">
+                        <div class="text-[44px] md:text-[56px] font-black text-[#dfb867] leading-none mb-3">100 %</div>
+                        <p class="text-[18px] md:text-[22px] font-bold text-white/95 leading-[1.6]">مطابقة للمعايير الأكاديمية الدولية والمحلية</p>
+                    </div>
+
+                    <!-- Stat 4 -->
+                    <div class="flex flex-col items-center justify-center p-8 md:p-10 text-center">
+                        <div class="text-[44px] md:text-[56px] font-black text-[#dfb867] leading-none mb-3">1</div>
+                        <p class="text-[18px] md:text-[22px] font-bold text-white/95 leading-[1.6]">نموذج 3D شامل يجمع الحي كامل</p>
                     </div>
                 </div>
             </div>
